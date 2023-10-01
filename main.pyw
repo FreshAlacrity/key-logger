@@ -1,18 +1,26 @@
-from pynput.keyboard import Key, Listener
-import logging
+from pynput.keyboard import Listener
+from pathlib import Path
+from time import monotonic_ns
+from datetime import date
 
-# Configure the log format to include a time and date stamp first
-logging.basicConfig(filename=("log.txt"), level=logging.DEBUG, format=" %(asctime)s - %(message)s")
+directory = Path("logs/")
 
-# add logging for mouse movements also to see what I'm pressing around that time
+def log_entry(action, key):
+    file_name = str(date.today()) + ".txt"
+    file_path = directory / file_name
+    time = monotonic_ns()
+    msg = ' - '.join(map(str, [time, action, key]))
+    with file_path.open("a", buffering=1, encoding="utf-8") as f:
+        f.write(f"{msg}\n")
 
-# Convert the key name into a string
 def on_press(key):
-    logging.info(str(key))
+    log_entry("pressed", key)
 
-def key_up(key):
-    on_press(key)
+def on_release(key):
+    log_entry("released", key)
 
 # Setup to run the on_press function when a keyboard key is pressed
-with Listener(on_press=on_press) as listener :
+with Listener(
+        on_press=on_press,
+        on_release=on_release) as listener:
     listener.join()

@@ -153,3 +153,5 @@ cython_debug/
 
 test.py
 logs/
+old_log.txt
+log.txt
