@@ -17,6 +17,13 @@ To run on startup, make a shortcut to main.pyw and add it to your startup folder
 - https://docs.python.org/3/library/functions.html#open
 
 ## To Do
+- analysis
+  - [ ] find words
+    - first, find and remove hotkeys
+    - [ ] take into account delete presses
+    - [ ] make a dictionary of word frequency
+  - [ ] find hotkeys
+    - [ ] look for non-alpha keys that aren't just being tapped
 - [x] log key up and key down separately
 - save logs:
   - [x] in dated files
