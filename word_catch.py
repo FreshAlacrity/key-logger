@@ -23,6 +23,27 @@ def get_log_entries():
     return log_list
 
 
+def catch_hotkeys(log_list):
+    def has_hotkey(key):
+        return ("ctrl" in key or "alt" in key)
+    new_list = []
+    skip = 0
+    for i, this_entry in enumerate(log_list):
+        if skip > 0:
+            skip = skip - 1
+            continue
+        elif this_entry["action"] == "pressed":
+            if has_hotkey(this_entry["key"]):
+                found = False
+                while not found:
+                    skip += 1
+                    if this_entry["key"] == log_list[i + skip]["key"]:
+                        found = True
+                continue
+        new_list.append(this_entry)
+    return new_list
+    
+    
 def get_old_log():
     log_list = []
     with open("old_log.txt", "r", encoding="utf-8") as f:
@@ -92,9 +113,17 @@ def print_words(words_list):
     )
 
 
+def filter_game_input(words_dict):
+    # @todo filter out game input/strings that are only WASD and not actual words like "dad" and "was"
+    # allow things like awww and dad
+    return words_dict
+    
 def get_word_dict():
     # Retrieve and parse all the new logs
     logs = get_log_entries()
+    
+    # Take out any hotkeys so they don't clog up words
+    logs = catch_hotkeys(logs)
     
     # Pare those down into only when keys are pressed
     logs = prune_release(logs)
@@ -107,5 +136,11 @@ def get_word_dict():
     
     # Find any words in the logs
     word_dict = find_words(logs)
+    
+    # Filter out WASD style inputs
+    word_dict = filter_game_input(word_dict)
+    
+    # @todo figure out some way to filter out misspellings
+    # Levenshtein distance from a common word?
     
     return word_dict
