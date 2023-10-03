@@ -155,3 +155,4 @@ test.py
 logs/
 old_log.txt
 log.txt
+export.json
