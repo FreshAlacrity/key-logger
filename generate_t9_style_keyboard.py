@@ -1,6 +1,6 @@
+import export
 from json import load
 from word_catch import get_word_dict
-from export import export_to_csv
 
 
 def get_names_list():
@@ -96,19 +96,24 @@ def find_character_conflicts(word_dict):
                 add_conflict(char_a, char_b, conflict_value)
                 add_conflict(char_b, char_a, conflict_value)
 
-
     return conflict_dict
 
-    
+
 def generate_keymap():
+    print("Retrieving words...")
+    
     word_dict = all_words(lowercase=True)
     print("Word dict acquired...")
-    
+
     conflict_dict = find_character_conflicts(word_dict)
     print("Conflicts found...")
+
+    export.to_csv(conflict_dict)
+    print("Conflicts exported...")
     
-    export_to_csv(conflict_dict)
-    print("CSV exported...")
+    export.to_json(word_dict)
+    print("Dictionary exported...")
     # @todo read the wikipedia for "greedy algorithm" to see if those will help go from here
+
 
 generate_keymap()

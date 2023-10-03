@@ -1,4 +1,7 @@
 import csv
+import json
+from datetime import date
+
 
 def format_as_rows(conflict_dict):
     rows = []
@@ -7,13 +10,18 @@ def format_as_rows(conflict_dict):
         rows.append(vals)
     return rows
 
-def export_to_csv(conflict_dict):
-    # @todo date the export
+
+def to_csv(conflict_dict):
     # @todo replace = with ="=" and ' with ="'"
-    with open('conflicts.csv', 'w', newline='') as file: 
+    with open(f"exports/conflicts-{date.today()}.csv", "w", newline="") as f:
         headers = list(conflict_dict.keys())
         headers.insert(0, "Compare")
         print(headers)
-        writer = csv.DictWriter(file, fieldnames = headers)
+        writer = csv.DictWriter(f, fieldnames=headers)
         writer.writeheader()
         writer.writerows(format_as_rows(conflict_dict))
+
+
+def to_json(word_dict):
+    with open(f"exports/dictionary-{date.today()}.json", "w", encoding="utf-8") as f:
+        json.dump(word_dict, f, ensure_ascii=False, indent=4)

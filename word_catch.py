@@ -144,3 +144,6 @@ def get_word_dict():
     # Levenshtein distance from a common word?
     
     return word_dict
+
+
+get_word_dict()
