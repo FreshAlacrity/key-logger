@@ -1,14 +1,83 @@
 import pandas
 from export import conflict_csv_file_path
-from export import to_json as export_to_json
+from export import to_csv as export_to_csv
+from word_catch import get_word_dict
+
+
+def char_frequency(word_dict):
+    char_dict = {}
+    for word, num in word_dict.items():
+        for letter in word:
+            if letter in char_dict:
+                char_dict[letter] += num
+            else:
+                char_dict[letter] = num
+    return char_dict
+
+
+def find_conflicts(word_dict, char_a, char_b):
+    # @todo break this down into two functions: one that lists groups of conflicting words and another that adds up the penalties (since it'd be interesting to see)
+    # Needs to be something that isn't in the characters already in the dict:
+    not_a_char = " "
+    penalty = 0
+    censored_dict = {}
+    for word, num in word_dict.items():
+        if num > 5 and (char_a in word or char_b in word):
+            # Censor the char and add to the set
+            censored = word.replace(char_a, not_a_char)
+            censored = censored.replace(char_b, not_a_char)
+            if censored in censored_dict:
+                censored_dict[censored].append(num)
+            else:
+                censored_dict[censored] = [num]
+    for _, penalties in censored_dict.items():
+        if len(penalties) > 1:
+            penalties.remove(max(*penalties))
+            for val in penalties:
+                penalty += val
+    return penalty
+
+
+def find_character_conflicts(word_dict):
+    """Finds the data you want for minimizing collisions on an overloaded keyboard."""
+
+    # @todo split this into sub-functions
+
+    # Find all unique characters
+    all_chars = char_frequency(word_dict).keys()
+    print("Characters counted...")
+
+    conflict_dict = {}
+
+    def in_conflict_dict(char_a, char_b):
+        return char_b in char_a
+
+    def add_conflict(char_a, char_b, conflict):
+        if not char_a in conflict_dict:
+            conflict_dict[char_a] = {char_b: conflict}
+        else:
+            conflict_dict[char_a][char_b] = conflict
+
+    find_conflicts(word_dict, "e", "x")
+
+    # For every combination of characters, see how many are in both sets:
+    for char_a in all_chars:
+        for char_b in all_chars:
+            if not char_a == char_b and not in_conflict_dict(char_a, char_b):
+                print(f"Comparing {char_a} and {char_b}")
+                conflict_value = find_conflicts(word_dict, char_a, char_b)
+                add_conflict(char_a, char_b, conflict_value)
+                add_conflict(char_b, char_a, conflict_value)
+
+    return conflict_dict
 
 
 def get_file():
     fp = conflict_csv_file_path()
     # with open(fp, encoding="utf-8", newline='') as f:
     data = pandas.read_csv(fp)
-    raw_dict = data.set_index('Compare').to_dict()
-    
+    raw_dict = data.set_index("Compare").to_dict()
+
     def raw(key):
         """Removes changes to CSV headers to work with Google Sheets"""
         if key[0:2] == '="':
@@ -25,17 +94,28 @@ def get_file():
                 # @later figure out how to import as integers directly
 
     return new_dict
-        
-def find_conflicts():
+
+
+def get_conflict_data():
     try:
-        word_dict = get_file()
+        conflict_data = get_file()
         print("Imported conflict data exported earlier today")
     except FileNotFoundError:
         print("Conflict data export not found; making one now")
-        # @todo
-        # print("Conflict data exported...")
+        conflict_data = find_character_conflicts(get_word_dict())
+        export_to_csv(conflict_data)
+        print("Conflict data exported...")
 
-    # @todo figure out some way to filter out misspellings
-    # Levenshtein distance from a common word?
+    return conflict_data
 
-    return word_dict
+
+def test_export_import():
+    # Note: delete any prior exports from the same day first
+    test_1 = get_conflict_data()
+    test_2 = get_conflict_data()
+    for char_a, entries in test_1.items():
+        for char_b in entries.keys():
+            q = test_1[char_a][char_b]
+            r = test_2[char_a][char_b]
+            if not q == r:
+                print("NOOOOO")
