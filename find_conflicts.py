@@ -1,4 +1,4 @@
-import pandas
+import pandas  # pylint: disable=import-error
 from export import conflict_csv_file_path
 from export import to_csv as export_to_csv
 from word_catch import get_word_dict
@@ -74,7 +74,8 @@ def find_character_conflicts(word_dict):
 
 def get_file():
     fp = conflict_csv_file_path()
-    # with open(fp, encoding="utf-8", newline='') as f:
+    
+    # Read in the data (and automatically close the file)
     data = pandas.read_csv(fp)
     raw_dict = data.set_index("Compare").to_dict()
 

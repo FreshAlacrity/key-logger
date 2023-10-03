@@ -1,11 +1,8 @@
-import export
-from word_catch import get_word_dict
 from find_conflicts import get_conflict_data
 
 
 def generate_keymap():
     conflict_dict = get_conflict_data()
-    print("Conflicts found...")
     
     print(conflict_dict)
     

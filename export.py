@@ -35,7 +35,7 @@ def to_csv(conflict_dict):
         for char, val in entry.items():
             new_dict[safe(key)][safe(char)] = val
 
-    with open(conflict_csv_file_path(), "w", newline="") as f:
+    with open(conflict_csv_file_path(), "w", newline="", encoding="utf-8") as f:
         headers = list(new_dict.keys())
         headers.insert(0, "Compare")
         writer = csv.DictWriter(f, fieldnames=headers)
