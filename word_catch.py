@@ -225,7 +225,7 @@ def get_word_dict():
     try:
         word_dict = get_file()
         print("Imported dictionary export from earlier today")
-    except:
+    except FileNotFoundError:
         print("Dictionary export not found; making one now")
         word_dict = get_all_logged_words()
         word_dict = tailor_word_dict(word_dict)

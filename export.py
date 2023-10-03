@@ -28,13 +28,13 @@ def to_csv(conflict_dict):
             return '="\'"'
         else:
             return key
-    
+
     new_dict = {}
     for key, entry in conflict_dict.items():
         new_dict[safe(key)] = {}
         for char, val in entry.items():
             new_dict[safe(key)][safe(char)] = val
-    
+
     with open(conflict_csv_file_path(), "w", newline="") as f:
         headers = list(new_dict.keys())
         headers.insert(0, "Compare")
