@@ -145,5 +145,3 @@ def get_word_dict():
     
     return word_dict
 
-
-get_word_dict()
