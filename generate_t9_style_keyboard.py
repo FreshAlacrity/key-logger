@@ -92,15 +92,13 @@ def generate_keymap():
     
     word_dict = all_words(lowercase=True)
     print("Word dict acquired...")
-
+    
     conflict_dict = find_character_conflicts(word_dict)
     print("Conflicts found...")
 
     export.to_csv(conflict_dict)
     print("Conflicts exported...")
     
-    export.to_json(word_dict)
-    print("Dictionary exported...")
     # @todo read the wikipedia for "greedy algorithm" to see if those will help go from here
 
 

@@ -1,6 +1,7 @@
 from pathlib import Path
 from json import load
-
+from export import dictionary_json_file_path
+from export import to_json as export_to_json
 directory = Path("logs/")
 
 
@@ -185,7 +186,7 @@ def add_names(word_dict, weight=10):
     return word_dict
 
 
-def get_word_dict():
+def get_all_logged_words():
     # Retrieve and parse all the new logs
     logs = get_log_entries()
 
@@ -199,8 +200,10 @@ def get_word_dict():
     logs = logs + get_old_log()
 
     # Find any words in the logs
-    word_dict = find_words(logs)
-
+    return find_words(logs)
+    
+    
+def tailor_word_dict(word_dict):
     # Filter out words that really don't show up much
     word_dict = low_bar(word_dict, min_val=5)
     
@@ -209,6 +212,25 @@ def get_word_dict():
     
     # Filter out WASD style inputs
     word_dict = filter_game_input(word_dict)
+    
+    return word_dict
+
+
+def get_file():
+    fp = dictionary_json_file_path()
+    with open(fp, "r", encoding="utf-8") as f:
+        return load(f)
+
+def get_word_dict():
+    try:
+        word_dict = get_file()
+        print("Imported dictionary export from earlier today")
+    except:
+        print("Dictionary export not found; making one now")
+        word_dict = get_all_logged_words()
+        word_dict = tailor_word_dict(word_dict)
+        export_to_json(word_dict)
+        print("Dictionary exported...")
 
     # @todo figure out some way to filter out misspellings
     # Levenshtein distance from a common word?
