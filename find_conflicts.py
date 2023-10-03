@@ -96,13 +96,24 @@ def get_file():
     return new_dict
 
 
+def lowercase(word_dict):
+    lowercase_word_dict = {}
+    for word, occurances in word_dict.items():
+        word = word.lower()
+        if word in lowercase_word_dict:
+            lowercase_word_dict[word] += occurances
+        else:
+            lowercase_word_dict[word] = occurances
+    return lowercase_word_dict
+
+
 def get_conflict_data():
     try:
         conflict_data = get_file()
         print("Imported conflict data exported earlier today")
     except FileNotFoundError:
         print("Conflict data export not found; making one now")
-        conflict_data = find_character_conflicts(get_word_dict())
+        conflict_data = find_character_conflicts(lowercase(get_word_dict()))
         export_to_csv(conflict_data)
         print("Conflict data exported...")
 
