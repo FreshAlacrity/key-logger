@@ -1,22 +1,10 @@
 import export
-from json import load
 from word_catch import get_word_dict
-
-
-def get_names_list():
-    """Imports names list from PK export file."""
-    with open("export.json", "r", encoding="utf-8") as f:
-        export = load(f)
-        return list(map(lambda a: a["name"], export["members"]))
 
 
 def all_words(lowercase=True):
     # Get words from all the logs
     word_dict = get_word_dict()
-
-    # Add names
-    for name in get_names_list():
-        word_dict[name] = 10
 
     if not lowercase:
         return word_dict

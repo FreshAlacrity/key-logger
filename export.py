@@ -11,17 +11,39 @@ def format_as_rows(conflict_dict):
     return rows
 
 
+def conflict_csv_file_path():
+    return f"exports/conflicts-{date.today()}.csv"
+
+
+def dictionary_json_file_path():
+    return f"exports/dictionary-{date.today()}.json"
+
+
 def to_csv(conflict_dict):
-    # @todo replace = with ="=" and ' with ="'"
-    with open(f"exports/conflicts-{date.today()}.csv", "w", newline="") as f:
-        headers = list(conflict_dict.keys())
+    def safe(key):
+        """Alters CSV headers to work with Google Sheets"""
+        if key == "=":
+            return '="="'
+        elif key == "'":
+            return '="\'"'
+        else:
+            return key
+    
+    new_dict = {}
+    for key, entry in conflict_dict.items():
+        new_dict[safe(key)] = {}
+        for char, val in entry.items():
+            new_dict[safe(key)][safe(char)] = val
+    
+    with open(conflict_csv_file_path(), "w", newline="") as f:
+        headers = list(new_dict.keys())
         headers.insert(0, "Compare")
         print(headers)
         writer = csv.DictWriter(f, fieldnames=headers)
         writer.writeheader()
-        writer.writerows(format_as_rows(conflict_dict))
+        writer.writerows(format_as_rows(new_dict))
 
 
 def to_json(word_dict):
-    with open(f"exports/dictionary-{date.today()}.json", "w", encoding="utf-8") as f:
+    with open(dictionary_json_file_path(), "w", encoding="utf-8") as f:
         json.dump(word_dict, f, ensure_ascii=False, indent=4)
