@@ -38,7 +38,6 @@ def to_csv(conflict_dict):
     with open(conflict_csv_file_path(), "w", newline="") as f:
         headers = list(new_dict.keys())
         headers.insert(0, "Compare")
-        print(headers)
         writer = csv.DictWriter(f, fieldnames=headers)
         writer.writeheader()
         writer.writerows(format_as_rows(new_dict))

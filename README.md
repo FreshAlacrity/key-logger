@@ -18,16 +18,19 @@ To run on startup, make a shortcut to main.pyw and add it to your startup folder
 
 ## To Do
 - analysis
-  - [ ] find words
-    - first, find and remove hotkeys
-    - [ ] take into account delete presses
-    - [ ] make a dictionary of word frequency
-  - [ ] find hotkeys
-    - [ ] look for non-alpha keys that aren't just being tapped
-- [x] log key up and key down separately
-- save logs:
-  - [x] in dated files
-  - [x] within a logs folder
-- [ ] add logging for (with delta if possible):
-  - [ ] mouse movements
-  - [ ] scrolling also
+  - [x] find words
+    - [x] first, find and remove hotkeys
+    - [x] take into account delete presses
+    - [x] make a dictionary of word frequency
+    - [ ] filter out common mispellings
+  - [x] find what characters conflict most
+  - [ ] assemble conflicts into possible key arrangements
+- logging
+  - [ ] add logging for:
+    - [ ] mouse clicks
+    - [ ] mouse movements (with delta if possible)
+    - [ ] scrolling
+  - [x] log key up and key down separately
+  - save logs:
+    - [x] in dated files
+    - [x] within a logs folder
