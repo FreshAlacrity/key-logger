@@ -7,18 +7,41 @@ from timetest import time_test
 def assemble_dictionary(key_arr, word_dict):
     """Takes an array of what characters are assigned to which keys and assembles a dictionary of words that can be produced with different keycode sequences"""
     
-    def index_from_char():
-        """Finds the index of the assigned key from a character string"""
-        # @todo
-        pass
+    def build_translation_dict():
+        trans_x = ""
+        trans_y = ""
+        for index, sublist in enumerate(key_arr):
+            index = str(index)
+            for char in sublist:
+                trans_y += index
+                trans_x += char
+        return str.maketrans(trans_x, trans_y)
     
+    def get_keycode(word):
+        return word.translate(key_dict)
+    
+    def add_to_dict(word):
+        keycode = get_keycode(word)
+        if keycode in final_dict:
+            final_dict[keycode].append(word)
+        else:
+            final_dict[keycode] = [word]
+    
+    key_dict = build_translation_dict()
+      
     final_dict = {}
-    # @todo make list of words keyed to index code
+    for word in word_dict:
+        add_to_dict(word)
+        
     # @todo sort each list by frequency
+    # @todo try printing some longer lists for the sake of curiosity
     
+    # @todo export to file (and include the keymap)
+    print(final_dict)
     return final_dict
 
 
 # Run a quick test of this module
 if __name__ == "__main__":
-    assemble_dictionary(generate_keymap(), get_word_dict())
+    keymap = generate_keymap()
+    assemble_dictionary(keymap, get_word_dict())

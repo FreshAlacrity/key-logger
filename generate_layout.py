@@ -103,5 +103,5 @@ def generate_keymap():
 
 # Run a quick test of this module
 if __name__ == "__main__":
-    key_arr = generate_keymap()
+    print(generate_keymap())
     

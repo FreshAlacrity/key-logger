@@ -1,10 +1,8 @@
 from pathlib import Path
-from json import load
-from export import dictionary_json_file_path
+from export import read_in_dict_file
 from export import to_json as export_to_json
 from timetest import time_test
-
-directory = Path("logs/")
+from json import load
 
 
 def get_log_entries():
@@ -18,6 +16,7 @@ def get_log_entries():
         return line_dict
 
     log_list = []
+    directory = Path("logs/")
     p = directory.glob("**/*")
     files = [x for x in p if x.is_file()]
     for q in files:
@@ -219,7 +218,7 @@ def tailor_word_dict(word_dict):
     by removing spurious input and 
     adding high quality data from other sources"""
     
-    MIN = 5
+    MIN = 10
     
     # Filter out words that really don't show up much
     word_dict = low_bar(word_dict, min_val=MIN)
@@ -246,13 +245,6 @@ def tailor_word_dict(word_dict):
     return word_dict
 
 
-def read_in_dict_file():
-    """Retrieve a JSON file with the word dictionary stored earlier today"""
-    fp = dictionary_json_file_path()
-    with open(fp, "r", encoding="utf-8") as f:
-        return load(f)
-
-
 def get_word_dict(live=False):
     """Return a completed dictionary of words 
     with a value for how often they appear, 
@@ -263,13 +255,13 @@ def get_word_dict(live=False):
         if live:
             # @later find a more elegant way to do this?
             raise FileNotFoundError("Don't use the file")
-        word_dict = read_in_dict_file()
+        word_dict = read_in_dict_file("usage_dictionary")
         print("Imported dictionary export from earlier today")
     except FileNotFoundError:
         print("Dictionary export not found; making one now")
         word_dict = get_all_logged_words()
         word_dict = tailor_word_dict(word_dict)
-        export_to_json(word_dict)
+        export_to_json(word_dict, "usage_dictionary")
         print("Dictionary exported...")
 
     return word_dict
@@ -277,4 +269,5 @@ def get_word_dict(live=False):
 
 # Run a quick test of this module
 if __name__ == "__main__":
-    export_to_json(get_word_dict(live=True))
+    get_word_dict(live=True)
+    get_word_dict()

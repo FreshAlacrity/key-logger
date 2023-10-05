@@ -15,8 +15,8 @@ def conflict_csv_file_path():
     return f"exports/conflicts-{date.today()}.csv"
 
 
-def dictionary_json_file_path():
-    return f"exports/dictionary-{date.today()}.json"
+def json_file_path(dict_type):
+    return f"exports/{dict_type}-{date.today()}.json"
 
 
 def to_csv(conflict_dict):
@@ -43,6 +43,13 @@ def to_csv(conflict_dict):
         writer.writerows(format_as_rows(new_dict))
 
 
-def to_json(word_dict):
-    with open(dictionary_json_file_path(), "w", encoding="utf-8") as f:
-        json.dump(word_dict, f, ensure_ascii=False, indent=4)
+def to_json(dict_obj, dict_type):
+    with open(json_file_path(dict_type), "w", encoding="utf-8") as f:
+        json.dump(dict_obj, f, ensure_ascii=False, indent=4)
+
+
+def read_in_dict_file(dict_type):
+    """Retrieve a JSON file with the word dictionary stored earlier today"""
+    file_path = json_file_path(dict_type)
+    with open(file_path, "r", encoding="utf-8") as f:
+        return json.load(f)

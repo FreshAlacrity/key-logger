@@ -1,5 +1,5 @@
 # Key-Logger
- A simple keylogger to gather data locally for analysing possible keyboard layouts
+A combination of simple keylogger and T9-style keyboard construction for minamal input composition
 
 ## Setup
 This will need to be done any time the file is moved!
@@ -27,13 +27,15 @@ To run on startup, make a shortcut to main.pyw and add it to your startup folder
     - [x] take into account delete presses
     - [x] make a dictionary of word frequency
     - [ ] filter out common mispellings
+  - [ ] support abbreviations and things like "dont" to "don't"
   - [x] find what characters conflict most
   - [x] assemble conflicts into possible key arrangements
+  - [ ] make a companion webapp to practice/test with arbitrary keys assigned
+  - [ ] export usable dictionary + layout
 - logging
-  - [ ] add logging for:
-    - [ ] mouse clicks
-    - [ ] mouse movements (with delta if possible)
-    - [ ] scrolling
+  - [ ] mouse clicks
+  - [ ] mouse movements (with delta if possible)
+  - [ ] scrolling
   - [x] log key up and key down separately
   - save logs:
     - [x] in dated files
