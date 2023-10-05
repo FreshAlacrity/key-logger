@@ -1,0 +1,24 @@
+from generate_layout import generate_keymap
+from word_catch import get_word_dict
+from timetest import time_test
+
+
+@time_test("Assemble dictionary")  # pylint: disable=no-value-for-parameter
+def assemble_dictionary(key_arr, word_dict):
+    """Takes an array of what characters are assigned to which keys and assembles a dictionary of words that can be produced with different keycode sequences"""
+    
+    def index_from_char():
+        """Finds the index of the assigned key from a character string"""
+        # @todo
+        pass
+    
+    final_dict = {}
+    # @todo make list of words keyed to index code
+    # @todo sort each list by frequency
+    
+    return final_dict
+
+
+# Run a quick test of this module
+if __name__ == "__main__":
+    assemble_dictionary(generate_keymap(), get_word_dict())

@@ -2,6 +2,7 @@ from pathlib import Path
 from json import load
 from export import dictionary_json_file_path
 from export import to_json as export_to_json
+from timetest import time_test
 
 directory = Path("logs/")
 
@@ -60,13 +61,11 @@ def prune_release(log_list):
     return list(filter(lambda a: not a["action"] == "released", log_list))
 
 
-def find_words(log_list):
-    def not_letter(a):
-        # Since there are only two one-letter words in English:
-        if a == "I" or a == "a":
-            return True
-        else:
-            return not (len(a) == 1 and a.isalpha())
+@time_test("Keypress filter")  # pylint: disable=no-value-for-parameter
+def filter_keypresses(log_list):
+    """Removes any key entries that are not written characters and applies backspace uses"""
+    # Time to beat is 3.5 seconds for 2487221 entries
+    # Try making a tuple of the right length and then filling it in by tracking index?
 
     def is_char(entry):
         k = entry["key"]
@@ -77,29 +76,36 @@ def find_words(log_list):
         if is_char(entry):
             new_list.append(entry["key"][1])
         elif "backspace" in entry["key"]:
-            new_list.append("<-")
+            del new_list[-1]
         else:
             new_list.append(" ")
+    return new_list
+
+
+@time_test("Word building")  # pylint: disable=no-value-for-parameter
+def build_words(new_list):
+    def not_letter(a):
+        # @todo also remove things like "b
+        allowed = "abixy"
+        a = a.lower()
+        return a in allowed or not (len(a) == 1 and a.isalpha())
+
+    def add_to_dict(word):
+        if word in found_word_dict:
+            found_word_dict[word] += 1
+        else:
+            found_word_dict[word] = 1
 
     found_word_dict = {}
-    word_builder = ""
-    for entry in new_list:
-        if entry == "<-":
-            word_builder = word_builder[0 : len(word_builder) - 1]
-        elif entry == " ":
-            # Add only sequences that are words or symbols, not blank
-            if not word_builder == "":
-                word_builder = word_builder.lower()
-                if not_letter(word_builder):
-                    if word_builder in found_word_dict:
-                        found_word_dict[word_builder] += 1
-                    else:
-                        found_word_dict[word_builder] = 1
-                    word_builder = ""
-        else:
-            word_builder += entry
+    for entry in "".join(new_list).split():
+        if not_letter(entry):
+            add_to_dict(entry)
 
     return found_word_dict
+
+
+def find_words(log_list):
+    return build_words(filter_keypresses(log_list))
 
 
 def words_dict_to_list(word_dict, required=2):
@@ -118,7 +124,8 @@ def print_words(words_list):
 
 
 def filter_game_input(words_dict):
-    # @todo filter out game input/strings that are only WASD and not actual words like "dad" and "was"
+    """Filter out game input/strings that are only WASD and 
+    not actual words like 'dad' and 'was'"""
     def is_just(word, letter):
         return all(map(lambda l: l == letter, word))
 
@@ -169,7 +176,7 @@ def get_names_list():
         return list(map(lambda a: a["name"], export["members"]))
 
 
-def add_names(word_dict, weight=10):
+def add_word_list(word_dict, word_list, weight=10):
     def set_min(string):
         if string in word_dict:
             word_dict[string] = max(weight + 1, word_dict[string])
@@ -180,14 +187,17 @@ def add_names(word_dict, weight=10):
         else:
             word_dict[string.lower()] = weight
 
-    for name in get_names_list():
-        set_min("-" + name)
-        set_min(name)
+    for word in word_list:
+        set_min("-" + word)
+        set_min(word)
 
     return word_dict
 
 
 def get_all_logged_words():
+    """Pull in both the new and old style logs 
+    and simplify them into individual words"""
+    
     # Retrieve and parse all the new logs
     logs = get_log_entries()
 
@@ -205,27 +215,55 @@ def get_all_logged_words():
 
 
 def tailor_word_dict(word_dict):
+    """Increase the overall quality of the dictionary 
+    by removing spurious input and 
+    adding high quality data from other sources"""
+    
+    MIN = 5
+    
     # Filter out words that really don't show up much
-    word_dict = low_bar(word_dict, min_val=5)
-
-    # Add names from PK export
-    word_dict = add_names(word_dict, weight=10)
+    word_dict = low_bar(word_dict, min_val=MIN)
 
     # Filter out WASD style inputs
     word_dict = filter_game_input(word_dict)
 
+    # Add names from PK export
+    word_dict = add_word_list(word_dict, get_names_list(), weight=(MIN * 2))
+
+    # Add most used neopronouns
+    # xe, xem, xyr, xyrs, xemself
+    # ey, em, eir, eirs, emself
+    # @todo track how much of the dictionary comes from each source
+    # Retrieve and add any output samples
+    # Include the code in this repository as samples
+    # Include PK descriptions as samples
+    # Also include all tidbits and shoutouts
+    # @todo
+
+    # @todo figure out some way to filter out misspellings
+    # Levenshtein distance from a common word?
+
     return word_dict
 
 
-def get_file():
+def read_in_dict_file():
+    """Retrieve a JSON file with the word dictionary stored earlier today"""
     fp = dictionary_json_file_path()
     with open(fp, "r", encoding="utf-8") as f:
         return load(f)
 
 
-def get_word_dict():
+def get_word_dict(live=False):
+    """Return a completed dictionary of words 
+    with a value for how often they appear, 
+    either by generating one with all recent data 
+    or retrieving one generated earlier in the same day"""
+    
     try:
-        word_dict = get_file()
+        if live:
+            # @later find a more elegant way to do this?
+            raise FileNotFoundError("Don't use the file")
+        word_dict = read_in_dict_file()
         print("Imported dictionary export from earlier today")
     except FileNotFoundError:
         print("Dictionary export not found; making one now")
@@ -234,7 +272,9 @@ def get_word_dict():
         export_to_json(word_dict)
         print("Dictionary exported...")
 
-    # @todo figure out some way to filter out misspellings
-    # Levenshtein distance from a common word?
-
     return word_dict
+
+
+# Run a quick test of this module
+if __name__ == "__main__":
+    export_to_json(get_word_dict(live=True))

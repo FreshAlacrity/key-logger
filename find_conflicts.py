@@ -2,6 +2,7 @@ import pandas  # pylint: disable=import-error
 from export import conflict_csv_file_path
 from export import to_csv as export_to_csv
 from word_catch import get_word_dict
+from timetest import time_test
 
 
 def char_frequency(word_dict):
@@ -38,6 +39,7 @@ def find_conflicts(word_dict, char_a, char_b):
     return penalty
 
 
+@time_test("Find character conflicts")  # pylint: disable=no-value-for-parameter
 def find_character_conflicts(word_dict):
     """Finds the data you want for minimizing collisions on an overloaded keyboard."""
 
@@ -62,9 +64,9 @@ def find_character_conflicts(word_dict):
 
     # For every combination of characters, see how many are in both sets:
     for char_a in all_chars:
+        print(f"Finding conflicts for {char_a}")
         for char_b in all_chars:
             if not char_a == char_b and not in_conflict_dict(char_a, char_b):
-                print(f"Comparing {char_a} and {char_b}")
                 conflict_value = find_conflicts(word_dict, char_a, char_b)
                 add_conflict(char_a, char_b, conflict_value)
                 add_conflict(char_b, char_a, conflict_value)
@@ -108,8 +110,11 @@ def lowercase(word_dict):
     return lowercase_word_dict
 
 
-def get_conflict_data():
+def get_conflict_data(live=False):
     try:
+        if live:
+            # @later find a more elegant way to do this?
+            raise FileNotFoundError("Don't use the file")
         conflict_data = get_file()
         print("Imported conflict data exported earlier today")
     except FileNotFoundError:
@@ -121,13 +126,21 @@ def get_conflict_data():
     return conflict_data
 
 
+@time_test("Test import/export")  # pylint: disable=no-value-for-parameter
 def test_export_import():
-    # Note: delete any prior exports from the same day first
-    test_1 = get_conflict_data()
+    test_1 = get_conflict_data(live=True)
     test_2 = get_conflict_data()
+    errors_found = False
     for char_a, entries in test_1.items():
         for char_b in entries.keys():
             q = test_1[char_a][char_b]
             r = test_2[char_a][char_b]
             if not q == r:
-                print("NOOOOO")
+                errors_found = True
+    if not errors_found:
+        print("Import/Export test successful")
+
+
+# Run a quick test of this module
+if __name__ == "__main__":
+    test_export_import()

@@ -17,14 +17,18 @@ To run on startup, make a shortcut to main.pyw and add it to your startup folder
 - https://docs.python.org/3/library/functions.html#open
 
 ## To Do
+- performance
+  - [x] start timing different operations
 - analysis
+  - [x] import usage data
+  - [ ] import samples of ideal usage
   - [x] find words
     - [x] first, find and remove hotkeys
     - [x] take into account delete presses
     - [x] make a dictionary of word frequency
     - [ ] filter out common mispellings
   - [x] find what characters conflict most
-  - [ ] assemble conflicts into possible key arrangements
+  - [x] assemble conflicts into possible key arrangements
 - logging
   - [ ] add logging for:
     - [ ] mouse clicks
