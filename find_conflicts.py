@@ -9,10 +9,7 @@ def char_frequency(word_dict):
     char_dict = {}
     for word, num in word_dict.items():
         for letter in word:
-            if letter in char_dict:
-                char_dict[letter] += num
-            else:
-                char_dict[letter] = num
+            char_dict[letter] = char_dict.get(letter, 0) + num
     return char_dict
 
 
@@ -27,10 +24,7 @@ def find_conflicts(word_dict, char_a, char_b):
             # Censor the char and add to the set
             censored = word.replace(char_a, not_a_char)
             censored = censored.replace(char_b, not_a_char)
-            if censored in censored_dict:
-                censored_dict[censored].append(num)
-            else:
-                censored_dict[censored] = [num]
+            censored_dict[censored] = censored_dict.get(censored, []) + [num]
     for _, penalties in censored_dict.items():
         if len(penalties) > 1:
             penalties.remove(max(*penalties))
@@ -100,14 +94,11 @@ def get_file():
 
 
 def lowercase(word_dict):
-    lowercase_word_dict = {}
+    lowercase_version = {}
     for word, occurances in word_dict.items():
         word = word.lower()
-        if word in lowercase_word_dict:
-            lowercase_word_dict[word] += occurances
-        else:
-            lowercase_word_dict[word] = occurances
-    return lowercase_word_dict
+        lowercase_version[word] = lowercase_version.get(word, 0) + occurances
+    return lowercase_version
 
 
 def get_conflict_data(live=False):

@@ -90,10 +90,7 @@ def build_words(new_list):
         return a in allowed or not (len(a) == 1 and a.isalpha())
 
     def add_to_dict(word):
-        if word in found_word_dict:
-            found_word_dict[word] += 1
-        else:
-            found_word_dict[word] = 1
+        found_word_dict[word] = found_word_dict.get(word, 0) + 1
 
     found_word_dict = {}
     for entry in "".join(new_list).split():
@@ -177,14 +174,9 @@ def get_names_list():
 
 def add_word_list(word_dict, word_list, weight=10):
     def set_min(string):
-        if string in word_dict:
-            word_dict[string] = max(weight + 1, word_dict[string])
-        else:
-            word_dict[string] = weight + 1
-        if string.lower() in word_dict:
-            word_dict[string.lower()] = max(weight, word_dict[string.lower()])
-        else:
-            word_dict[string.lower()] = weight
+        word_dict[string] = max(weight + 1, word_dict.get(string, 0))
+        string = string.lower()
+        word_dict[string] = max(weight, word_dict.get(string, 0))
 
     for word in word_list:
         set_min("-" + word)
