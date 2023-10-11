@@ -81,8 +81,7 @@ def filter_keypresses(log_list):
     return new_list
 
 
-@time_test("Word building")  # pylint: disable=no-value-for-parameter
-def build_words(new_list):
+def words_list_to_dict(word_list):
     def not_letter(a):
         # @todo also remove things like "b
         allowed = "abixy"
@@ -93,14 +92,19 @@ def build_words(new_list):
         found_word_dict[word] = found_word_dict.get(word, 0) + 1
 
     found_word_dict = {}
-    for entry in "".join(new_list).split():
+    for entry in word_list:
         if not_letter(entry):
             add_to_dict(entry)
 
     return found_word_dict
+    
+    
+@time_test("Word building")  # pylint: disable=no-value-for-parameter
+def build_words(new_list):
+    return words_list_to_dict("".join(new_list).split())
 
 
-def find_words(log_list):
+def find_words_in_log(log_list):
     return build_words(filter_keypresses(log_list))
 
 
@@ -172,7 +176,19 @@ def get_names_list():
         return list(map(lambda a: a["name"], export["members"]))
 
 
-def add_word_list(word_dict, word_list, weight=10):
+@time_test("Get descriptions")  # pylint: disable=no-value-for-parameter
+def get_all_descriptions():
+    """Imports description text from PK export file."""
+    with open("export.json", "r", encoding="utf-8") as f:
+        members = load(f)["members"]
+        d = "description"
+        descriptions = [m[d] for m in members if m[d] is not None]
+        return "\n".join(descriptions)
+
+
+def dict_from_word_list(word_list, weight=10):
+    word_dict = {}
+    
     def set_min(string):
         word_dict[string] = max(weight + 1, word_dict.get(string, 0))
         string = string.lower()
@@ -182,6 +198,16 @@ def add_word_list(word_dict, word_list, weight=10):
         set_min("-" + word)
         set_min(word)
 
+    return word_dict
+
+
+def combine_dict(word_dict, dict_2, add=True):
+    for key in dict_2:
+        if add:
+            word_dict[key] = word_dict.get(key, 0) + dict_2[key]
+        else:
+            word_dict[key] = max(word_dict.get(key, 0), dict_2[key])
+            
     return word_dict
 
 
@@ -202,7 +228,15 @@ def get_all_logged_words():
     logs = logs + get_old_log()
 
     # Find any words in the logs
-    return find_words(logs)
+    return find_words_in_log(logs)
+
+
+def string_to_dict(string):
+    separate_words = ["\n", ".", "\\", "/", "&", "=", "[", "]"]
+    # @later maybe also _ and - and other dividers?
+    for char in separate_words:
+        string = string.replace(char, f" {char} ")
+    return words_list_to_dict(string.split())
 
 
 def tailor_word_dict(word_dict):
@@ -218,21 +252,20 @@ def tailor_word_dict(word_dict):
     # Filter out WASD style inputs
     word_dict = filter_game_input(word_dict)
 
-    # Add names from PK export
-    word_dict = add_word_list(word_dict, get_names_list(), weight=(MIN * 2))
-
-    # Add most used neopronouns
-    # xe, xem, xyr, xyrs, xemself
-    # ey, em, eir, eirs, emself
-    # @todo track and support setting how much of the dictionary comes from each source
     # Retrieve and add any output samples (/samples directory)
-    # Include PK descriptions as samples
-    # Also include all tidbits and shoutouts
-    # Break between words/names and citations like [1]
-    # @todo
+    # @todo retrieve and process samples into dictionaries and export those if they weren't already exported, importing where available
+    
+    # Add names from PK export
+    dict_2 = dict_from_word_list(get_names_list(), weight=(MIN * 2))
+    word_dict = combine_dict(word_dict, dict_2, add=True)
+    
+    # Add descriptions from PK export
+    dict_2 = string_to_dict(get_all_descriptions())
+    word_dict = combine_dict(word_dict, dict_2, add=True)
+    
+    # @todo track and support setting how much of the dictionary comes from each source
 
-    # @todo figure out some way to filter out misspellings
-    # Levenshtein distance from a common word?
+    # @todo filter out misspellings here using pyspellcheck
 
     return word_dict
 
@@ -251,8 +284,11 @@ def get_word_dict(live=False):
         print("Imported dictionary export from earlier today")
     except FileNotFoundError:
         print("Dictionary export not found; making one now")
+        
         word_dict = get_all_logged_words()
+        
         word_dict = tailor_word_dict(word_dict)
+        
         export_to_json(word_dict, "usage_dictionary")
         print("Dictionary exported...")
 

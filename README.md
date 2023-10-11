@@ -15,6 +15,7 @@ To run on startup, make a shortcut to main.pyw and add it to your startup folder
 - https://pynput.readthedocs.io/en/latest/keyboard.html
 - https://www.askpython.com/python/examples/python-keylogger
 - https://docs.python.org/3/library/functions.html#open
+- https://github.com/barrust/pyspellchecker/tree/master
 
 ## To Do
 - performance
@@ -22,15 +23,20 @@ To run on startup, make a shortcut to main.pyw and add it to your startup folder
 - practice
   - [ ] make a practice arena where layouts can be tested that tracks average speed and where mistakes are made
 - analysis
+  - [ ] start tracking what words are most likely to follow other words
   - [x] import usage data
   - [ ] import samples of ideal usage
-    - [ ] include a 'word soup' file with handy words (like 'log' and 'todo')
+    - [x] gather samples
+    - [x] include also pre-compiled word dictionaries
   - [x] find words
     - [x] first, find and remove hotkeys
     - [x] take into account delete presses
     - [x] make a dictionary of word frequency
-    - [ ] filter out common mispellings
+    - [ ] filter out/correct common mispellings
+      - [ ] redirect common mispellings to the correct word
       - [ ] keep 'in versions of 'ing words
+      - [ ] install and test https://github.com/barrust/pyspellchecker/tree/master
+      - [ ] seems handy: `unknown([words])`
     - [ ] track by number but remove commas and new lines, except where they happen most frequently
   - [ ] support abbreviations and things like "dont" to "don't" (for apostrophes, dashes, and semicolons)
   - [ ] layout scoring
