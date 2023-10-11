@@ -224,11 +224,11 @@ def tailor_word_dict(word_dict):
     # Add most used neopronouns
     # xe, xem, xyr, xyrs, xemself
     # ey, em, eir, eirs, emself
-    # @todo track how much of the dictionary comes from each source
-    # Retrieve and add any output samples
-    # Include the code in this repository as samples
+    # @todo track and support setting how much of the dictionary comes from each source
+    # Retrieve and add any output samples (/samples directory)
     # Include PK descriptions as samples
     # Also include all tidbits and shoutouts
+    # Break between words/names and citations like [1]
     # @todo
 
     # @todo figure out some way to filter out misspellings

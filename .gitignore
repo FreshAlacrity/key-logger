@@ -153,6 +153,7 @@ cython_debug/
 
 test.py
 logs/
+samples/
 old_log.txt
 log.txt
 *.json

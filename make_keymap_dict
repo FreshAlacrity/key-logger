@@ -1,9 +1,10 @@
 from generate_layout import generate_keymap
 from word_catch import get_word_dict
 from timetest import time_test
+from export import to_json as export_to_json
 
 
-@time_test("Assemble dictionary")  # pylint: disable=no-value-for-parameter
+@time_test("Assemble keymapped dictionary")  # pylint: disable=no-value-for-parameter
 def assemble_dictionary(key_arr, word_dict):
     """Takes an array of what characters are assigned to which keys and assembles a dictionary of words that can be produced with different keycode sequences"""
     
@@ -36,12 +37,11 @@ def assemble_dictionary(key_arr, word_dict):
     # @todo sort each list by frequency
     # @todo try printing some longer lists for the sake of curiosity
     
-    # @todo export to file (and include the keymap)
-    print(final_dict)
+    # Export to file (including the keymap)
+    export_to_json({ "keymap": key_arr, "dictionary": final_dict }, "keymap_dictionary")
     return final_dict
 
 
 # Run a quick test of this module
 if __name__ == "__main__":
-    keymap = generate_keymap()
-    assemble_dictionary(keymap, get_word_dict())
+    assemble_dictionary(generate_keymap(), get_word_dict())

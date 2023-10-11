@@ -4,6 +4,8 @@ from timetest import time_test
 
 @time_test("Generate keymap")  # pylint: disable=no-value-for-parameter
 def generate_keymap():
+    COMBINED_CHARACTERS = ["ie"]
+
     def print_key_arr():
         for index, keys in enumerate(key_arr):
             print(f"Key {index + 1}: {' '.join(keys)}")
@@ -63,8 +65,33 @@ def generate_keymap():
         else:
             key_arr[index].append(char)
 
+    def combine_groups():
+        """Collapses the data for a set of characters into one character"""
+        for char_set in COMBINED_CHARACTERS:
+            for char in char_set:
+                if not char == char_set[0]:
+                    for key, value in conflict_dict[char].items():
+                        if key in conflict_dict[char_set[0]]:
+                            conflict_dict[char_set[0]][key] += value
+                    for key in conflict_dict:
+                        if char in conflict_dict[key]:
+                            del conflict_dict[key][char]
+                    del conflict_dict[char]
+
+    def show_groups_in_layout():
+        """Adds previously combined characters back into the layout"""
+        for char_set in COMBINED_CHARACTERS:
+            for key_set in key_arr:
+                if char_set[0] in key_set:
+                    for char in char_set[1]:
+                        # Add the char after the initial char in the list
+                        key_set.insert(key_set.index(char_set[0]) + 1, char)
+
     print("Getting conflict data...")
     conflict_dict = get_conflict_data()
+    
+    # Combine grouped characters into a single character to represent the group
+    combine_groups()
 
     remaining_chars = list(conflict_dict.keys())
 
@@ -72,13 +99,20 @@ def generate_keymap():
     key_arr = []
 
     # Put the character with the highest total conflict as Key 1
-    add_to_key(highest_total_conflict()[0], index=-1)
+    worst_ever = highest_total_conflict()
+    add_to_key(worst_ever[0], index=-1)
 
     # Fill in the first set of characters
+    previous_conflict = worst_ever[1] * 1.0
     while len(key_arr) < MAX_KEYS:
         # Add as a new key the key that conflicts most with all assigned keys
         worst_bud = most_conflicting(assigned_chars())
-        # print(worst_bud[1] ** (1.0 / len(assigned_chars())))
+
+        # Track how much conflict this key has compared to the last
+        current_conflict = worst_bud[1] ** (1.0 / len(assigned_chars()))
+        print(f"Conflict ratio: {previous_conflict / current_conflict}")
+        previous_conflict = current_conflict
+
         add_to_key(worst_bud[0], index=-1)
 
     # Continue adding characters until there are none left
@@ -90,18 +124,18 @@ def generate_keymap():
         best_place = narrow_conflict_product(worst_bud[0], key_arr)
         add_to_key(worst_bud[0], best_place)
 
+    # Uncombine grouped characters
+    show_groups_in_layout()
+
     print_key_arr()
-    
-    # @todo add to layouts.json
-    
-    # @todo sort characters by frequency of letter press, for strict entry?
+
+    # @todo sort characters by frequency of letter press
 
     # @todo Test if the relative number of presses per key are similar
-    
+
     return key_arr
 
 
 # Run a quick test of this module
 if __name__ == "__main__":
     print(generate_keymap())
-    

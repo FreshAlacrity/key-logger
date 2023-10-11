@@ -19,15 +19,24 @@ To run on startup, make a shortcut to main.pyw and add it to your startup folder
 ## To Do
 - performance
   - [x] start timing different operations
+- practice
+  - [ ] make a practice arena where layouts can be tested that tracks average speed and where mistakes are made
 - analysis
   - [x] import usage data
   - [ ] import samples of ideal usage
+    - [ ] include a 'word soup' file with handy words (like 'log' and 'todo')
   - [x] find words
     - [x] first, find and remove hotkeys
     - [x] take into account delete presses
     - [x] make a dictionary of word frequency
     - [ ] filter out common mispellings
-  - [ ] support abbreviations and things like "dont" to "don't"
+      - [ ] keep 'in versions of 'ing words
+    - [ ] track by number but remove commas and new lines, except where they happen most frequently
+  - [ ] support abbreviations and things like "dont" to "don't" (for apostrophes, dashes, and semicolons)
+  - [ ] layout scoring
+    - [ ] by word collisions (divided by the number of word uses in the dictionary that goes with it?)
+      - [ ] see how much conflict increases with i and e together just for curiosity's sake (since that would make a lot of common mispellings moot)
+    - [ ] try using the time data from logs to calculate average conflicts per minute
   - [x] find what characters conflict most
   - [x] assemble conflicts into possible key arrangements
   - [ ] make a companion webapp to practice/test with arbitrary keys assigned
