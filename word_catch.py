@@ -4,6 +4,9 @@ from export import to_json as export_to_json
 from timetest import time_test
 from json import load
 
+# Filters out any words that occur fewer than N times:
+MIN = 10
+
 
 def get_log_entries():
     def break_line(line):
@@ -97,8 +100,8 @@ def words_list_to_dict(word_list):
             add_to_dict(entry)
 
     return found_word_dict
-    
-    
+
+
 @time_test("Word building")  # pylint: disable=no-value-for-parameter
 def build_words(new_list):
     return words_list_to_dict("".join(new_list).split())
@@ -124,8 +127,9 @@ def print_words(words_list):
 
 
 def filter_game_input(words_dict):
-    """Filter out game input/strings that are only WASD and 
+    """Filter out game input/strings that are only WASD and
     not actual words like 'dad' and 'was'"""
+
     def is_just(word, letter):
         return all(map(lambda l: l == letter, word))
 
@@ -188,7 +192,7 @@ def get_all_descriptions():
 
 def dict_from_word_list(word_list, weight=10):
     word_dict = {}
-    
+
     def set_min(string):
         word_dict[string] = max(weight + 1, word_dict.get(string, 0))
         string = string.lower()
@@ -207,14 +211,14 @@ def combine_dict(word_dict, dict_2, add=True):
             word_dict[key] = word_dict.get(key, 0) + dict_2[key]
         else:
             word_dict[key] = max(word_dict.get(key, 0), dict_2[key])
-            
+
     return word_dict
 
 
 def get_all_logged_words():
-    """Pull in both the new and old style logs 
+    """Pull in both the new and old style logs
     and simplify them into individual words"""
-    
+
     # Retrieve and parse all the new logs
     logs = get_log_entries()
 
@@ -232,37 +236,58 @@ def get_all_logged_words():
 
 
 def string_to_dict(string):
-    separate_words = ["\n", ".", "\\", "/", "&", "=", "[", "]"]
+    separate_words = ["\n", ".", ",", "\\", "/", "&", "=", "[", "]", ":", ";"]
     # @later maybe also _ and - and other dividers?
+    # @todo pull out elipses also so it doesn't just go like . . .
     for char in separate_words:
         string = string.replace(char, f" {char} ")
     return words_list_to_dict(string.split())
 
 
+def make_dicts_for_samples():
+    directory = Path("samples/")
+    all_files = [x for x in directory.glob("*") if x.is_file()]
+
+    for q in all_files:
+        new_file_name = str(q)[len("samples/") : str(q).index(".")]
+        print(f"Converting {new_file_name} into dict")
+        with q.open(encoding="utf-8") as f:
+            new_dict = {}
+            for line in f:
+                if "csv" in str(q):
+                    # @later re-export with a different divider?
+                    line = line.replace('"""', '"')
+                new_dict = combine_dict(new_dict, string_to_dict(line), add=True)
+            if "csv" in str(q):
+                # So commas don't end up wildly over-weighted:
+                new_dict[","] = new_dict[","] / 10
+            export_to_json(new_dict, new_file_name, sample=True)
+
+    # Add dict for names from PK export
+    names = dict_from_word_list(get_names_list(), weight=(MIN * 2))
+    export_to_json(names, "pk_names", sample=True)
+
+    # Add dict for descriptions from PK export
+    descriptions = string_to_dict(get_all_descriptions())
+    export_to_json(descriptions, "pk_descriptions", sample=True)
+# make_dicts_for_samples()
+
+
 def tailor_word_dict(word_dict):
-    """Increase the overall quality of the dictionary 
-    by removing spurious input and 
+    """Increase the overall quality of the dictionary
+    by removing spurious input and
     adding high quality data from other sources"""
-    
-    MIN = 10
-    
-    # Filter out words that really don't show up much
-    word_dict = low_bar(word_dict, min_val=MIN)
 
     # Filter out WASD style inputs
     word_dict = filter_game_input(word_dict)
 
     # Retrieve and add any output samples (/samples directory)
-    # @todo retrieve and process samples into dictionaries and export those if they weren't already exported, importing where available
-    
-    # Add names from PK export
-    dict_2 = dict_from_word_list(get_names_list(), weight=(MIN * 2))
-    word_dict = combine_dict(word_dict, dict_2, add=True)
-    
-    # Add descriptions from PK export
-    dict_2 = string_to_dict(get_all_descriptions())
-    word_dict = combine_dict(word_dict, dict_2, add=True)
-    
+    # @todo
+    # word_dict = combine_dict(word_dict, dict_2, add=True)
+
+    # Filter out words that really don't show up much
+    word_dict = low_bar(word_dict, min_val=MIN)
+
     # @todo track and support setting how much of the dictionary comes from each source
 
     # @todo filter out misspellings here using pyspellcheck
@@ -271,11 +296,11 @@ def tailor_word_dict(word_dict):
 
 
 def get_word_dict(live=False):
-    """Return a completed dictionary of words 
-    with a value for how often they appear, 
-    either by generating one with all recent data 
+    """Return a completed dictionary of words
+    with a value for how often they appear,
+    either by generating one with all recent data
     or retrieving one generated earlier in the same day"""
-    
+
     try:
         if live:
             # @later find a more elegant way to do this?
@@ -284,11 +309,11 @@ def get_word_dict(live=False):
         print("Imported dictionary export from earlier today")
     except FileNotFoundError:
         print("Dictionary export not found; making one now")
-        
+
         word_dict = get_all_logged_words()
-        
+
         word_dict = tailor_word_dict(word_dict)
-        
+
         export_to_json(word_dict, "usage_dictionary")
         print("Dictionary exported...")
 
@@ -297,5 +322,8 @@ def get_word_dict(live=False):
 
 # Run a quick test of this module
 if __name__ == "__main__":
-    get_word_dict(live=True)
-    get_word_dict()
+    # Doesn't need to always be running:
+    make_dicts_for_samples()
+    
+    # get_word_dict(live=True)
+    # get_word_dict()

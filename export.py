@@ -15,8 +15,11 @@ def conflict_csv_file_path():
     return f"exports/conflicts-{date.today()}.csv"
 
 
-def json_file_path(dict_type):
-    return f"exports/{dict_type}-{date.today()}.json"
+def json_file_path(dict_type, sample=False):
+    if not sample:
+        return f"exports/{dict_type}-{date.today()}.json"
+    else:
+        return f"samples/sample_dicts/{dict_type}.json"
 
 
 def to_csv(conflict_dict):
@@ -42,9 +45,10 @@ def to_csv(conflict_dict):
         writer.writeheader()
         writer.writerows(format_as_rows(new_dict))
 
-
-def to_json(dict_obj, dict_type):
-    with open(json_file_path(dict_type), "w", encoding="utf-8") as f:
+    
+def to_json(dict_obj, dict_type, sample=False):
+    file_path = json_file_path(dict_type, sample)
+    with open(file_path, "w", encoding="utf-8") as f:
         json.dump(dict_obj, f, ensure_ascii=False, indent=4)
 
 
