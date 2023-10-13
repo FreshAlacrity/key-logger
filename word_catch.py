@@ -258,6 +258,8 @@ def make_dicts_for_samples():
                 if ".csv" in str(q):
                     for cell in list(csv_reader([line]))[0]:
                         new_dict = combine_dict(new_dict, string_to_dict(cell), add=True)
+                else:
+                    new_dict = combine_dict(new_dict, string_to_dict(line), add=True)
             export_to_json(new_dict, new_file_name, sample=True)
 
     # Add dict for names from PK export
