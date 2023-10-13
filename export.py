@@ -1,6 +1,28 @@
 import csv
 import json
 from datetime import date
+from pathlib import Path
+
+
+def get_log_entries():
+    def break_line(line):
+        line = line.rstrip()
+        labels = ["time", "action", "key"]
+        parts = line.split(" - ")
+        line_dict = {}
+        for i, p in enumerate(parts):
+            line_dict[labels[i]] = p
+        return line_dict
+
+    log_list = []
+    directory = Path("logs/")
+    p = directory.glob("**/*")
+    files = [x for x in p if x.is_file()]
+    for q in files:
+        with q.open() as f:
+            for line in f:
+                log_list.append(break_line(line))
+    return log_list
 
 
 def format_as_rows(conflict_dict):

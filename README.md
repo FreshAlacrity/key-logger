@@ -19,6 +19,11 @@ To run on startup, make a shortcut to main.pyw and add it to your startup folder
 
 
 ## Known Issues
+- emojis that occur frequently in PK descriptions are being over-represented
+  - lock those in frequency to the corresponding names?
+- emojis assigned to single keys would be hard to use: instead use the discord word-name + synonyms and abbreviate common ones, so all I'd need to do to get the :ram: emoji is get to "ram" and then hit the "next" key
+- no support for having a word immediately followed by another character or word
+ - space, backspace and then new word?
 - repeating strings of BREAK_AT characters won't be recognized well
   - so ??? and ... etc
 - some strings aren't being broken correctly by BREAK_AT strings

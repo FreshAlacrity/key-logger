@@ -3,16 +3,20 @@ from export import conflict_csv_file_path
 from export import to_csv as export_to_csv
 from word_catch import get_word_dict
 from timetest import time_test
+from word_catch import low_bar
 
+# Minimum occurances for both words and characters
+MIN = 2
 
 def char_frequency(word_dict):
     char_dict = {}
-    for word, num in word_dict.items():
+    for word in word_dict:
         for letter in word:
-            char_dict[letter] = char_dict.get(letter, 0) + num
+            char_dict[letter] = char_dict.get(letter, 0) + 1
     return char_dict
 
 
+@time_test("Find character pair conflict")  # pylint: disable=no-value-for-parameter
 def find_conflicts(word_dict, char_a, char_b):
     # @todo break this down into two functions: one that lists groups of conflicting words and another that adds up the penalties (since it'd be interesting to see)
     # Needs to be something that isn't in the characters already in the dict:
@@ -20,7 +24,7 @@ def find_conflicts(word_dict, char_a, char_b):
     penalty = 0
     censored_dict = {}
     for word, num in word_dict.items():
-        if num > 5 and (char_a in word or char_b in word):
+        if char_a in word or char_b in word:
             # Censor the char and add to the set
             censored = word.replace(char_a, not_a_char)
             censored = censored.replace(char_b, not_a_char)
@@ -33,18 +37,19 @@ def find_conflicts(word_dict, char_a, char_b):
     return penalty
 
 
+def find_unique_chars(word_dict):
+    # Find all unique characters that occur more often than just by themselves
+    all_chars_dict = char_frequency(word_dict)
+    all_chars = [x for x in all_chars_dict.keys() if all_chars_dict[x] > 2]
+    print(f"Characters assembled: {''.join(all_chars)}")
+    return all_chars
+
+
+# @todo split this into sub-functions
 @time_test("Find character conflicts")  # pylint: disable=no-value-for-parameter
 def find_character_conflicts(word_dict):
     """Finds the data you want for minimizing collisions on an overloaded keyboard."""
-
-    # @todo split this into sub-functions
-
-    # Find all unique characters
-    all_chars = char_frequency(word_dict).keys()
-    print("Characters counted...")
-
-    conflict_dict = {}
-
+    
     def in_conflict_dict(char_a, char_b):
         return char_b in char_a
 
@@ -54,7 +59,12 @@ def find_character_conflicts(word_dict):
         else:
             conflict_dict[char_a][char_b] = conflict
 
-    find_conflicts(word_dict, "e", "x")
+    # Remove low-frequency words:
+    word_dict = low_bar(word_dict, MIN)
+    
+    all_chars = find_unique_chars(word_dict)
+
+    conflict_dict = {}
 
     # For every combination of characters, see how many are in both sets:
     for char_a in all_chars:

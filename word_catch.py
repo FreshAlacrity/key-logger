@@ -5,118 +5,14 @@ from timetest import time_test
 from json import load
 from csv import reader as csv_reader
 from spellchecker import SpellChecker
+from get_logs import get_all_logged_words
 
 # Filters out any words that occur fewer than N times:
 MIN = 10
 
 # Treats these symbols as independent words:
 BREAK_AT = "\n | \" . , \\ / & = + [ ] ( ) : ; _ @ $ ? ! **".split()
-# @todo pull out elipses also so it doesn't just go like . . .
-
-
-def get_log_entries():
-    def break_line(line):
-        line = line.rstrip()
-        labels = ["time", "action", "key"]
-        parts = line.split(" - ")
-        line_dict = {}
-        for i, p in enumerate(parts):
-            line_dict[labels[i]] = p
-        return line_dict
-
-    log_list = []
-    directory = Path("logs/")
-    p = directory.glob("**/*")
-    files = [x for x in p if x.is_file()]
-    for q in files:
-        with q.open() as f:
-            for line in f:
-                log_list.append(break_line(line))
-    return log_list
-
-
-def catch_hotkeys(log_list):
-    def has_hotkey(key):
-        return "ctrl" in key or "alt" in key
-
-    new_list = []
-    skip = 0
-    for i, this_entry in enumerate(log_list):
-        if skip > 0:
-            skip = skip - 1
-            continue
-        elif this_entry["action"] == "pressed":
-            if has_hotkey(this_entry["key"]):
-                found = False
-                while not found:
-                    skip += 1
-                    # This prevents an error when the word_catch is run *while* holding a key down from a hotkey:
-                    if skip < len(log_list):
-                        if this_entry["key"] == log_list[i + skip]["key"]:
-                            found = True
-                continue
-        new_list.append(this_entry)
-    return new_list
-
-
-def get_old_log():
-    log_list = []
-    with open("old_log.txt", "r", encoding="utf-8") as f:
-        for line in f:
-            log_list.append({"key": line.rstrip(), "action": "pressed"})
-    return log_list
-
-
-def prune_release(log_list):
-    return list(filter(lambda a: not a["action"] == "released", log_list))
-
-
-@time_test("Keypress filter")  # pylint: disable=no-value-for-parameter
-def filter_keypresses(log_list):
-    """Removes any key entries that are not written characters and applies backspace uses"""
-    # Time to beat is 3.5 seconds for 2487221 entries
-    # Try making a tuple of the right length and then filling it in by tracking index?
-
-    def is_char(entry):
-        k = entry["key"]
-        return len(k) == 3 and k[0] == "'" and k[2] == "'"
-
-    new_list = []
-    for entry in log_list:
-        if is_char(entry):
-            new_list.append(entry["key"][1])
-        elif "backspace" in entry["key"]:
-            del new_list[-1]
-        else:
-            new_list.append(" ")
-    return new_list
-
-
-def words_list_to_dict(word_list):
-    def not_letter(a):
-        # @todo also remove things like "b
-        allowed = "abixy"
-        a = a.lower()
-        return a in allowed or not (len(a) == 1 and a.isalpha())
-
-    def add_to_dict(word):
-        found_word_dict[word] = found_word_dict.get(word, 0) + 1
-
-    found_word_dict = {}
-    for entry in word_list:
-        if not_letter(entry):
-            add_to_dict(entry)
-
-    return found_word_dict
-
-
-@time_test("Word building")  # pylint: disable=no-value-for-parameter
-def build_words(new_list):
-    return words_list_to_dict("".join(new_list).split())
-
-
-def find_words_in_log(log_list):
-    return build_words(filter_keypresses(log_list))
+# @todo allow groups of these without spaces once preceding/following words are supported
 
 
 def words_dict_to_list(word_dict, required=2):
@@ -132,43 +28,6 @@ def print_words(words_list):
         f"Words found: {len(words_list)}\n",
         "\n".join(map(lambda a: f"{a[0]}: {a[1]}", words_list)),
     )
-
-
-def filter_game_input(words_dict):
-    """Filter out game input/strings that are only WASD and
-    not actual words like 'dad' and 'was'"""
-
-    def is_just(word, letter):
-        return all(map(lambda l: l == letter, word))
-
-    def is_repeat(word):
-        word = word.lower()
-        return any(map(lambda a: is_just(word, a), "wasd"))
-
-    def is_nonsense(word):
-        if not any(map(lambda a: a == "a", word)):
-            # Just w, s, and d? Very likely to be nonsense
-            return True
-        elif word[0] == "a" and is_just(word[1 : len(word)], "w"):
-            # Some variation of awwwwww is not nonsense
-            return False
-        else:
-            # If it's longer than 15 letters, nonsense
-            return len(word) > 15
-
-    def is_wasd(letter):
-        letter = letter.lower()
-        return letter == "w" or letter == "a" or letter == "s" or letter == "d"
-
-    new_dict = {}
-    for word, value in words_dict.items():
-        if (not word == "www") and (not word == "a") and (not word == "wasd"):
-            if all(map(is_wasd, word)):
-                if is_repeat(word) or is_nonsense(word):
-                    continue
-        new_dict[word] = value
-
-    return new_dict
 
 
 def low_bar(words_dict, min_val=5):
@@ -198,19 +57,41 @@ def get_all_descriptions():
         return "\n".join(descriptions)
 
 
-def dict_from_word_list(word_list, weight=10):
-    word_dict = {}
+def add_pk_export_names(word_dict, weight=10):
+    """Sets a minimum frequency for all names from the PK export file
+    in capitalized and lowercase forms, with and without preceding hypens."""
+    
+    names = get_names_list()
 
     def set_min(string):
-        word_dict[string] = max(weight + 1, word_dict.get(string, 0))
-        string = string.lower()
         word_dict[string] = max(weight, word_dict.get(string, 0))
+        string = string.lower()
+        word_dict[string] = max(weight // 2, word_dict.get(string, 0))
 
-    for word in word_list:
-        set_min("-" + word)
-        set_min(word)
+    for name in names:
+        set_min("-" + name)
+        set_min(name)
 
     return word_dict
+
+
+# @todo track precedes and follows here
+def words_list_to_dict(word_list):
+    def not_letter(a):
+        # Letters allowed to be words by themselves:
+        allowed = "abixyz"
+        a = a.lower()
+        return a in allowed or not (len(a) == 1 and a.isalpha())
+
+    def add_to_dict(word):
+        found_word_dict[word] = found_word_dict.get(word, 0) + 1
+
+    found_word_dict = {}
+    for entry in word_list:
+        if not_letter(entry):
+            add_to_dict(entry)
+
+    return found_word_dict
 
 
 def combine_dict(word_dict, dict_2, add=True, cap=None):
@@ -219,36 +100,17 @@ def combine_dict(word_dict, dict_2, add=True, cap=None):
         total = sum_of_frequencies(dict_2)
         if total > cap:
             # Reduce the weight of dict entries
-            multiply_by = cap // total
+            multiply_by = cap / total
 
     for key in dict_2:
-        value = multiply_by * dict_2[key]
+        # Tamp down the frequency of words from large dictionaries
+        value = max(int(dict_2[key] * multiply_by), 1)
         if add:
             word_dict[key] = word_dict.get(key, 0) + value
         else:
             word_dict[key] = max(word_dict.get(key, 0), value)
 
     return word_dict
-
-
-def get_all_logged_words():
-    """Pull in both the new and old style logs
-    and simplify them into individual words"""
-
-    # Retrieve and parse all the new logs
-    logs = get_log_entries()
-
-    # Take out any hotkeys so they don't clog up words
-    logs = catch_hotkeys(logs)
-
-    # Pare those down into only when keys are pressed
-    logs = prune_release(logs)
-
-    # Retrieve and add old logs
-    logs = logs + get_old_log()
-
-    # Find any words in the logs
-    return find_words_in_log(logs)
 
 
 def string_to_dict(string):
@@ -307,37 +169,39 @@ def include_sample_dicts(word_dict):
 def check_for_mispelled_words(word_dict):
     spelling = SpellChecker()
     
+    # @todo filter out kebab case by looking for words with hypens that aren't in the dictionary
+    
     # @todo add a reference dicts folder to compare words to
     # and gather those words here to mark as known
     
-    print("\n".join(spelling.unknown(word_dict.keys())))
+    # print("\n".join(spelling.unknown(word_dict.keys())))
     # @todo
 
 
 def tailor_word_dict(word_dict):
-    """Increase the overall quality of the dictionary
-    by removing spurious input and
-    adding high quality data from other sources"""
+    """Includes data from previously analysed output samples
+    and trims low quality words"""
 
-    # Filter out WASD style inputs
-    word_dict = filter_game_input(word_dict)
-
-    # Retrieve and add any output samples (/samples directory)
-    word_dict = include_sample_dicts(word_dict)
-
-    print(f"Total word count: {sum_of_frequencies(word_dict)}")
-
+    print(f"Words: {len(word_dict.keys())}")
+    
     print("Removing low frequency words")
     word_dict = low_bar(word_dict, min_val=MIN)
+    
+    print(f"Words: {len(word_dict.keys())}")
+    
+    print("Adding words from output samples")
+    word_dict = include_sample_dicts(word_dict)
 
-    print(f"Total word count: {sum_of_frequencies(word_dict)}")
+    print(f"Words: {len(word_dict.keys())}")
 
-    print("Checking for mispellings @todo")
+    # @todo add 'in versions of 'ing words
+    
+    print("Checking for mispellings")
     check_for_mispelled_words(word_dict)
+    # @todo troubleshoot why some BREAK_AT characters are included in words
 
     print("Adding names from PK export")
-    names = dict_from_word_list(get_names_list(), weight=(MIN * 2))
-    word_dict = combine_dict(word_dict, names, add=True)
+    word_dict = add_pk_export_names(word_dict, weight=(MIN * 2))
 
     return word_dict
 
@@ -356,10 +220,14 @@ def get_word_dict(live=False):
         print("Imported dictionary export from earlier today")
     except FileNotFoundError:
         print("Dictionary export not found; making one now")
-
-        word_dict = get_all_logged_words()
-
+            
+        word_dict = string_to_dict(' '.join(get_all_logged_words()))
+        
+        print(f"Words: {len(word_dict.keys())}")
+        
         word_dict = tailor_word_dict(word_dict)
+        
+        print(f"Words: {len(word_dict.keys())}")
 
         export_to_json(word_dict, "usage_dictionary")
         print("Dictionary exported...")
