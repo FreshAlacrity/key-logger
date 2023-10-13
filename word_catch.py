@@ -206,12 +206,20 @@ def dict_from_word_list(word_list, weight=10):
     return word_dict
 
 
-def combine_dict(word_dict, dict_2, add=True):
+def combine_dict(word_dict, dict_2, add=True, cap=None):
+    multiply_by = 1
+    if cap:
+        total = sum_of_frequencies(dict_2)
+        if total > cap:
+            # Reduce the weight of dict entries
+            multiply_by = cap // total
+        
     for key in dict_2:
+        value = multiply_by * dict_2[key]
         if add:
-            word_dict[key] = word_dict.get(key, 0) + dict_2[key]
+            word_dict[key] = word_dict.get(key, 0) + value
         else:
-            word_dict[key] = max(word_dict.get(key, 0), dict_2[key])
+            word_dict[key] = max(word_dict.get(key, 0), value)
 
     return word_dict
 
@@ -237,7 +245,7 @@ def get_all_logged_words():
 
 
 def string_to_dict(string):
-    separate_words = ["\n", ".", ",", "\\", "/", "&", "=", "[", "]", ":", ";"]
+    separate_words = ["\n", ".", ",", "\\", "/", "&", "=", "[", "]", ":", ";", "_"]
     # @later maybe also _ and - and other dividers?
     # @todo pull out elipses also so it doesn't just go like . . .
     for char in separate_words:
@@ -269,8 +277,28 @@ def make_dicts_for_samples():
     # Add dict for descriptions from PK export
     descriptions = string_to_dict(get_all_descriptions())
     export_to_json(descriptions, "pk_descriptions", sample=True)
-# make_dicts_for_samples()
 
+
+def sum_of_frequencies(word_dict):
+    running_total = 0
+    for value in word_dict.values():
+        running_total += value
+    return running_total
+
+
+def include_sample_dicts(word_dict):
+    print("Loading in sample dicts")
+
+    directory = Path("samples/sample_dicts/")
+    all_files = [x for x in directory.glob("*") if x.is_file()]
+    cap = sum_of_frequencies(word_dict) // 4
+
+    for q in all_files:
+        with q.open(encoding="utf-8") as f:
+            file_dict = load(f)
+            word_dict = combine_dict(word_dict, file_dict, add=True, cap=cap)
+    return word_dict
+    
 
 def tailor_word_dict(word_dict):
     """Increase the overall quality of the dictionary
@@ -281,13 +309,14 @@ def tailor_word_dict(word_dict):
     word_dict = filter_game_input(word_dict)
 
     # Retrieve and add any output samples (/samples directory)
-    # @todo
-    # word_dict = combine_dict(word_dict, dict_2, add=True)
+    word_dict = include_sample_dicts(word_dict)
+    
+    print(f"Total word count: {sum_of_frequencies(word_dict)}")
 
     # Filter out words that really don't show up much
     word_dict = low_bar(word_dict, min_val=MIN)
-
-    # @todo track and support setting how much of the dictionary comes from each source
+    
+    print(f"Total word count: {sum_of_frequencies(word_dict)}")
 
     # @todo filter out misspellings here using pyspellcheck
 
@@ -322,7 +351,8 @@ def get_word_dict(live=False):
 # Run a quick test of this module
 if __name__ == "__main__":
     # Doesn't need to always be running:
-    make_dicts_for_samples()
-    
-    # get_word_dict(live=True)
+    # make_dicts_for_samples()
+    #218155
+    #1645660978
+    get_word_dict(live=True)
     # get_word_dict()
