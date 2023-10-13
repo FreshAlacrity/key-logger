@@ -19,9 +19,19 @@ To run on startup, make a shortcut to main.pyw and add it to your startup folder
 
 
 ## Known Issues
+- repeating strings of BREAK_AT characters won't be recognized well
+  - so ??? and ... etc
+- some strings aren't being broken correctly by BREAK_AT strings
+- not sure how to handle emojis and other unusual characters
+- WASD input filtering is so-so
+  - filter by blocks of text so things like "sad" and "dad" aren't overcounted
+
+### Fixed
 - project ids (C59D6EC4 etc) are over-represented
   - now only allowing unique cells from csv samples
   - exported project sheet with only text cells, removing ID columns
+- names often register as mispelled
+  - add names after checking spelling
 
 ## To Do
 - performance
@@ -29,7 +39,9 @@ To run on startup, make a shortcut to main.pyw and add it to your startup folder
 - practice
   - [ ] make a practice arena where layouts can be tested that tracks average speed and where mistakes are made
 - analysis
-  - [ ] what words are most likely to follow other words
+  - [ ] what words are most likely to precede and follow a given word
+    - [ ] if a word is extremely often followed or preceded by another, group them into one word (so for example, ".py" and ".png" should be considered words)
+    - [ ] catch strings with : on either end since those are emoji references
   - [x] import usage data
   - [ ] import and include samples of ideal usage
     - [x] gather samples

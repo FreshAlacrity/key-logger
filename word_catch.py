@@ -4,9 +4,14 @@ from export import to_json as export_to_json
 from timetest import time_test
 from json import load
 from csv import reader as csv_reader
+from spellchecker import SpellChecker
 
 # Filters out any words that occur fewer than N times:
-MIN = 15
+MIN = 10
+
+# Treats these symbols as independent words:
+BREAK_AT = "\n | \" . , \\ / & = + [ ] ( ) : ; _ @ $ ? ! **".split()
+# @todo pull out elipses also so it doesn't just go like . . .
 
 
 def get_log_entries():
@@ -157,7 +162,7 @@ def filter_game_input(words_dict):
 
     new_dict = {}
     for word, value in words_dict.items():
-        if (not word == "www") and (not word == "a"):
+        if (not word == "www") and (not word == "a") and (not word == "wasd"):
             if all(map(is_wasd, word)):
                 if is_repeat(word) or is_nonsense(word):
                     continue
@@ -215,7 +220,7 @@ def combine_dict(word_dict, dict_2, add=True, cap=None):
         if total > cap:
             # Reduce the weight of dict entries
             multiply_by = cap // total
-        
+
     for key in dict_2:
         value = multiply_by * dict_2[key]
         if add:
@@ -247,10 +252,7 @@ def get_all_logged_words():
 
 
 def string_to_dict(string):
-    separate_words = ["\n", ".", ",", "\\", "/", "&", "=", "[", "]", ":", ";", "_", "?", "!"]
-    # @later maybe also _ and - and other dividers?
-    # @todo pull out elipses also so it doesn't just go like . . .
-    for char in separate_words:
+    for char in BREAK_AT:
         string = string.replace(char, f" {char} ")
     return words_list_to_dict(string.split())
 
@@ -276,10 +278,6 @@ def make_dicts_for_samples():
                     new_dict = combine_dict(new_dict, string_to_dict(line), add=True)
             export_to_json(new_dict, new_file_name, sample=True)
 
-    # Add dict for names from PK export
-    names = dict_from_word_list(get_names_list(), weight=(MIN * 2))
-    export_to_json(names, "pk_names", sample=True)
-
     # Add dict for descriptions from PK export
     descriptions = string_to_dict(get_all_descriptions())
     export_to_json(descriptions, "pk_descriptions", sample=True)
@@ -304,7 +302,17 @@ def include_sample_dicts(word_dict):
             file_dict = load(f)
             word_dict = combine_dict(word_dict, file_dict, add=True, cap=cap)
     return word_dict
+
+
+def check_for_mispelled_words(word_dict):
+    spelling = SpellChecker()
     
+    # @todo add a reference dicts folder to compare words to
+    # and gather those words here to mark as known
+    
+    print("\n".join(spelling.unknown(word_dict.keys())))
+    # @todo
+
 
 def tailor_word_dict(word_dict):
     """Increase the overall quality of the dictionary
@@ -316,16 +324,20 @@ def tailor_word_dict(word_dict):
 
     # Retrieve and add any output samples (/samples directory)
     word_dict = include_sample_dicts(word_dict)
-    
+
     print(f"Total word count: {sum_of_frequencies(word_dict)}")
 
     print("Removing low frequency words")
     word_dict = low_bar(word_dict, min_val=MIN)
-    
+
     print(f"Total word count: {sum_of_frequencies(word_dict)}")
 
     print("Checking for mispellings @todo")
-    # @todo filter out misspellings here using pyspellcheck
+    check_for_mispelled_words(word_dict)
+
+    print("Adding names from PK export")
+    names = dict_from_word_list(get_names_list(), weight=(MIN * 2))
+    word_dict = combine_dict(word_dict, names, add=True)
 
     return word_dict
 
@@ -358,7 +370,7 @@ def get_word_dict(live=False):
 # Run a quick test of this module
 if __name__ == "__main__":
     # Doesn't need to always be running:
-    make_dicts_for_samples()
+    # make_dicts_for_samples()
 
     get_word_dict(live=True)
     # get_word_dict()
