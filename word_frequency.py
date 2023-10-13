@@ -1,26 +1,18 @@
-from pathlib import Path
-from export import read_in_dict_file
-from export import to_json as export_to_json
-from timetest import time_test
-from json import load
-from csv import reader as csv_reader
+
+import export
 from spellchecker import SpellChecker
 from get_logs import get_all_logged_words
 
-# Filters out any words that occur fewer than N times:
-MIN = 10
 
-# Treats these symbols as independent words:
-BREAK_AT = "\n | \" . , \\ / & = + [ ] ( ) : ; _ @ $ ? ! **".split()
-# @todo allow groups of these without spaces once preceding/following words are supported
+# Filter out any words that occur fewer than N times:
+MIN = 5
 
 
-def words_dict_to_list(word_dict, required=2):
+def print_words_dict(word_dict):
     word_list = list(word_dict.items())
-    word_list = filter(lambda a: a[1] > required, word_list)
     word_list = sorted(word_list, key=lambda a: a[1])
     word_list.reverse()
-    return word_list
+    print(', '.join([f"'{x[0]}': {x[1]}" for x in word_list]))
 
 
 def print_words(words_list):
@@ -40,28 +32,11 @@ def low_bar(words_dict, min_val=5):
     return new_dict
 
 
-def get_names_list():
-    """Imports names list from PK export file."""
-    with open("export.json", "r", encoding="utf-8") as f:
-        export = load(f)
-        return list(map(lambda a: a["name"], export["members"]))
-
-
-@time_test("Get descriptions")  # pylint: disable=no-value-for-parameter
-def get_all_descriptions():
-    """Imports description text from PK export file."""
-    with open("export.json", "r", encoding="utf-8") as f:
-        members = load(f)["members"]
-        d = "description"
-        descriptions = [m[d] for m in members if m[d] is not None]
-        return "\n".join(descriptions)
-
-
 def add_pk_export_names(word_dict, weight=10):
     """Sets a minimum frequency for all names from the PK export file
     in capitalized and lowercase forms, with and without preceding hypens."""
     
-    names = get_names_list()
+    names = export.get_names_list()
 
     def set_min(string):
         word_dict[string] = max(weight, word_dict.get(string, 0))
@@ -75,7 +50,6 @@ def add_pk_export_names(word_dict, weight=10):
     return word_dict
 
 
-# @todo track precedes and follows here
 def words_list_to_dict(word_list):
     def not_letter(a):
         # Letters allowed to be words by themselves:
@@ -114,35 +88,24 @@ def combine_dict(word_dict, dict_2, add=True, cap=None):
 
 
 def string_to_dict(string):
-    for char in BREAK_AT:
-        string = string.replace(char, f" {char} ")
+    string = export.break_string(string)
     return words_list_to_dict(string.split())
 
 
 def make_dicts_for_samples():
-    directory = Path("samples/")
-    all_files = [x for x in directory.glob("*") if x.is_file()]
-
-    for q in all_files:
-        new_file_name = str(q)[len("samples/") : str(q).index(".")]
-        print(f"Converting {new_file_name} into dict")
-        with q.open(encoding="utf-8") as f:
-            new_dict = {}
-            for line in f:
-                if ".csv" in str(q):
-                    unique_strings = []
-                    for cell in list(csv_reader([line]))[0]:
-                        if cell not in unique_strings:
-                            unique_strings.append(cell)
-                    for s in unique_strings:
-                        new_dict = combine_dict(new_dict, string_to_dict(s), add=True)
-                else:
-                    new_dict = combine_dict(new_dict, string_to_dict(line), add=True)
-            export_to_json(new_dict, new_file_name, sample=True)
-
+    samples_dict = export.get_samples()
+    for name, sample in samples_dict.items():
+        sample_dict = {}
+        
+        for line in sample:
+            combine_dict(sample_dict, string_to_dict(line), add=True)
+        
+        print(f"Exporting frequency dict for sample {name}")
+        export.to_json(sample_dict, name, sample=True)
+        
     # Add dict for descriptions from PK export
-    descriptions = string_to_dict(get_all_descriptions())
-    export_to_json(descriptions, "pk_descriptions", sample=True)
+    descriptions = string_to_dict("\n".join(export.get_all_descriptions()))
+    export.to_json(descriptions, "pk_descriptions", sample=True)
 
 
 def sum_of_frequencies(word_dict):
@@ -153,16 +116,10 @@ def sum_of_frequencies(word_dict):
 
 
 def include_sample_dicts(word_dict):
-    print("Loading in sample dicts")
-
-    directory = Path("samples/sample_dicts/")
-    all_files = [x for x in directory.glob("*") if x.is_file()]
     cap = sum_of_frequencies(word_dict) // 4
-
-    for q in all_files:
-        with q.open(encoding="utf-8") as f:
-            file_dict = load(f)
-            word_dict = combine_dict(word_dict, file_dict, add=True, cap=cap)
+    sample_dict_list = export.get_sample_dicts()
+    for q in sample_dict_list:
+        word_dict = combine_dict(word_dict, q, add=True, cap=cap)
     return word_dict
 
 
@@ -176,32 +133,37 @@ def check_for_mispelled_words(word_dict):
     
     # print("\n".join(spelling.unknown(word_dict.keys())))
     # @todo
+    return word_dict
 
 
-def tailor_word_dict(word_dict):
-    """Includes data from previously analysed output samples
+def generate_word_dict():
+    """Gets word data from logs and output samples
     and trims low quality words"""
 
+    print("\nGetting logged words")
+    word_dict = string_to_dict(' '.join(get_all_logged_words()))
     print(f"Words: {len(word_dict.keys())}")
     
-    print("Removing low frequency words")
+    print("\nRemoving low frequency words")
     word_dict = low_bar(word_dict, min_val=MIN)
-    
     print(f"Words: {len(word_dict.keys())}")
     
-    print("Adding words from output samples")
+    print("\nAdding words from output samples")
     word_dict = include_sample_dicts(word_dict)
-
     print(f"Words: {len(word_dict.keys())}")
 
     # @todo add 'in versions of 'ing words
     
-    print("Checking for mispellings")
-    check_for_mispelled_words(word_dict)
+    print("\nChecking for mispellings")
+    word_dict = check_for_mispelled_words(word_dict)
+    print(f"Words: {len(word_dict.keys())}")
+    
     # @todo troubleshoot why some BREAK_AT characters are included in words
+    # they should each be registered as their own words
 
-    print("Adding names from PK export")
+    print("\nAdding names from PK export")
     word_dict = add_pk_export_names(word_dict, weight=(MIN * 2))
+    print(f"Words: {len(word_dict.keys())}")
 
     return word_dict
 
@@ -216,20 +178,13 @@ def get_word_dict(live=False):
         if live:
             # @later find a more elegant way to do this?
             raise FileNotFoundError("Don't use the file")
-        word_dict = read_in_dict_file("usage_dictionary")
+        word_dict = export.read_in_dict_file("usage_dictionary")
         print("Imported dictionary export from earlier today")
     except FileNotFoundError:
         print("Dictionary export not found; making one now")
-            
-        word_dict = string_to_dict(' '.join(get_all_logged_words()))
         
-        print(f"Words: {len(word_dict.keys())}")
-        
-        word_dict = tailor_word_dict(word_dict)
-        
-        print(f"Words: {len(word_dict.keys())}")
-
-        export_to_json(word_dict, "usage_dictionary")
+        word_dict = generate_word_dict()
+        export.to_json(word_dict, "usage_dictionary")
         print("Dictionary exported...")
 
     return word_dict
@@ -238,7 +193,8 @@ def get_word_dict(live=False):
 # Run a quick test of this module
 if __name__ == "__main__":
     # Doesn't need to always be running:
-    # make_dicts_for_samples()
+    make_dicts_for_samples()
 
-    get_word_dict(live=True)
+    words_dict = get_word_dict(live=True)
+    print_words_dict(words_dict)
     # get_word_dict()
