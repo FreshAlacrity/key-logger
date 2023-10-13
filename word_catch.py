@@ -6,7 +6,7 @@ from json import load
 from csv import reader as csv_reader
 
 # Filters out any words that occur fewer than N times:
-MIN = 10
+MIN = 15
 
 
 def get_log_entries():
@@ -45,8 +45,10 @@ def catch_hotkeys(log_list):
                 found = False
                 while not found:
                     skip += 1
-                    if this_entry["key"] == log_list[i + skip]["key"]:
-                        found = True
+                    # This prevents an error when the word_catch is run *while* holding a key down from a hotkey:
+                    if skip < len(log_list):
+                        if this_entry["key"] == log_list[i + skip]["key"]:
+                            found = True
                 continue
         new_list.append(this_entry)
     return new_list
@@ -245,7 +247,7 @@ def get_all_logged_words():
 
 
 def string_to_dict(string):
-    separate_words = ["\n", ".", ",", "\\", "/", "&", "=", "[", "]", ":", ";", "_"]
+    separate_words = ["\n", ".", ",", "\\", "/", "&", "=", "[", "]", ":", ";", "_", "?", "!"]
     # @later maybe also _ and - and other dividers?
     # @todo pull out elipses also so it doesn't just go like . . .
     for char in separate_words:
@@ -264,8 +266,12 @@ def make_dicts_for_samples():
             new_dict = {}
             for line in f:
                 if ".csv" in str(q):
+                    unique_strings = []
                     for cell in list(csv_reader([line]))[0]:
-                        new_dict = combine_dict(new_dict, string_to_dict(cell), add=True)
+                        if cell not in unique_strings:
+                            unique_strings.append(cell)
+                    for s in unique_strings:
+                        new_dict = combine_dict(new_dict, string_to_dict(s), add=True)
                 else:
                     new_dict = combine_dict(new_dict, string_to_dict(line), add=True)
             export_to_json(new_dict, new_file_name, sample=True)
@@ -313,11 +319,12 @@ def tailor_word_dict(word_dict):
     
     print(f"Total word count: {sum_of_frequencies(word_dict)}")
 
-    # Filter out words that really don't show up much
+    print("Removing low frequency words")
     word_dict = low_bar(word_dict, min_val=MIN)
     
     print(f"Total word count: {sum_of_frequencies(word_dict)}")
 
+    print("Checking for mispellings @todo")
     # @todo filter out misspellings here using pyspellcheck
 
     return word_dict
@@ -351,8 +358,7 @@ def get_word_dict(live=False):
 # Run a quick test of this module
 if __name__ == "__main__":
     # Doesn't need to always be running:
-    # make_dicts_for_samples()
-    #218155
-    #1645660978
+    make_dicts_for_samples()
+
     get_word_dict(live=True)
     # get_word_dict()

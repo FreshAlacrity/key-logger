@@ -17,6 +17,12 @@ To run on startup, make a shortcut to main.pyw and add it to your startup folder
 - https://docs.python.org/3/library/functions.html#open
 - https://github.com/barrust/pyspellchecker/tree/master
 
+
+## Known Issues
+- project ids (C59D6EC4 etc) are over-represented
+  - now only allowing unique cells from csv samples
+  - exported project sheet with only text cells, removing ID columns
+
 ## To Do
 - performance
   - [x] start timing different operations
