@@ -23,21 +23,23 @@ To run on startup, make a shortcut to main.pyw and add it to your startup folder
 - practice
   - [ ] make a practice arena where layouts can be tested that tracks average speed and where mistakes are made
 - analysis
-  - [ ] start tracking what words are most likely to follow other words
+  - [ ] what words are most likely to follow other words
   - [x] import usage data
-  - [ ] import samples of ideal usage
+  - [ ] import and include samples of ideal usage
     - [x] gather samples
     - [x] include also pre-compiled word dictionaries
   - [x] find words
     - [x] first, find and remove hotkeys
     - [x] take into account delete presses
     - [x] make a dictionary of word frequency
-    - [ ] filter out/correct common mispellings
-      - [ ] redirect common mispellings to the correct word
-      - [ ] keep 'in versions of 'ing words
-      - [ ] install and test https://github.com/barrust/pyspellchecker/tree/master
-      - [ ] seems handy: `unknown([words])`
-    - [ ] track by number but remove commas and new lines, except where they happen most frequently
+  - [ ] filter out/correct common mispellings
+    - [ ] redirect common mispellings to the correct word
+    - [ ] keep 'in versions of 'ing words
+    - [ ] install and test https://github.com/barrust/pyspellchecker/tree/master
+    - [ ] seems handy: `unknown([words])`
+  - [x] track by number but remove commas and new lines
+    - [ ] track where they happen most frequently and re-include those as "words"
+    - [ ] filter commas out of CSVs correctly
   - [ ] support abbreviations and things like "dont" to "don't" (for apostrophes, dashes, and semicolons)
   - [ ] layout scoring
     - [ ] by word collisions (divided by the number of word uses in the dictionary that goes with it?)

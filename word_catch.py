@@ -3,6 +3,7 @@ from export import read_in_dict_file
 from export import to_json as export_to_json
 from timetest import time_test
 from json import load
+from csv import reader as csv_reader
 
 # Filters out any words that occur fewer than N times:
 MIN = 10
@@ -254,13 +255,9 @@ def make_dicts_for_samples():
         with q.open(encoding="utf-8") as f:
             new_dict = {}
             for line in f:
-                if "csv" in str(q):
-                    # @later re-export with a different divider?
-                    line = line.replace('"""', '"')
-                new_dict = combine_dict(new_dict, string_to_dict(line), add=True)
-            if "csv" in str(q):
-                # So commas don't end up wildly over-weighted:
-                new_dict[","] = new_dict[","] / 10
+                if ".csv" in str(q):
+                    for cell in list(csv_reader([line]))[0]:
+                        new_dict = combine_dict(new_dict, string_to_dict(cell), add=True)
             export_to_json(new_dict, new_file_name, sample=True)
 
     # Add dict for names from PK export
