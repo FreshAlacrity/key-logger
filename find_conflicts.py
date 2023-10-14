@@ -1,9 +1,9 @@
 import pandas  # pylint: disable=import-error
 from export import conflict_csv_file_path
 from export import to_csv as export_to_csv
-from word_catch import get_word_dict
+from word_frequency import get_word_dict
+from word_frequency import low_bar
 from timetest import time_test
-from word_catch import low_bar
 
 # Minimum occurances for both words and characters
 MIN = 2
@@ -45,10 +45,26 @@ def find_unique_chars(word_dict):
     return all_chars
 
 
+def add_synonyms(word_dict):
+    """Strip the 's out of words and add those versions to the dict"""
+    
+    new_dict = {}
+    for word, value in word_dict.items():
+        new_dict[word] = value
+        if "'" in word or "-" in word or ";" in word:
+            s = word.replace("'", '')
+            s = word.replace("-", '')
+            s = word.replace(";", '')
+            new_dict[s] = new_dict.get(s, 0) + value
+            # print(s)  # @todo figure out why this is catching *a lot* of things
+    return new_dict
+    
 # @todo split this into sub-functions
 @time_test("Find character conflicts")  # pylint: disable=no-value-for-parameter
 def find_character_conflicts(word_dict):
     """Finds the data you want for minimizing collisions on an overloaded keyboard."""
+    
+    word_dict = add_synonyms(word_dict)
     
     def in_conflict_dict(char_a, char_b):
         return char_b in char_a
@@ -78,6 +94,7 @@ def find_character_conflicts(word_dict):
     return conflict_dict
 
 
+# @todo move this to export.py
 def get_file():
     fp = conflict_csv_file_path()
     
@@ -117,6 +134,7 @@ def get_conflict_data(live=False):
             # @later find a more elegant way to do this?
             raise FileNotFoundError("Don't use the file")
         conflict_data = get_file()
+                
         print("Imported conflict data exported earlier today")
     except FileNotFoundError:
         print("Conflict data export not found; making one now")

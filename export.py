@@ -5,14 +5,27 @@ from pathlib import Path
 
 
 def break_string(string):
-    # Treats these symbols as independent words:
-    # @todo allow groups of these without spaces once preceding/following words are supported
-    BREAK_AT = "\n | \" . , \\ / & = + [ ] ( ) : ; _ @ $ ? ! **".split()
+    # @todo handle these with the regex module
+    # @todo allow groups of these without spaces (so like ?! and ... and ```)
+    
+    # Treat these symbols as independent words
+    BREAK_AT = "\n | \" . , \\ / & = + [ ] ( ) { } : _ @ $ ? ! * ` “ ” --".split()
     for char in BREAK_AT:
         string = string.replace(char, f" {char} ")
+        
+    # Treat these as words if they occur at the start or end of a word
+    string = f" {string} "
+    for char in "' - ;".split():
+        string = string.replace(f"{char} ", f" {char} ")
+        string = string.replace(f" {char}", f" {char} ")
+    
+    # Break up html tags
+    # @todo regex - make sure it's not >= that I'm breaking up
+    string = string.replace(">", "> ")
+    string = string.replace("<", " <")
     return string
 
-
+    
 def get_names_list():
     """Imports names list from PK export file."""
     with open("export.json", "r", encoding="utf-8") as f:
@@ -141,3 +154,8 @@ def read_in_dict_file(dict_type):
     file_path = json_file_path(dict_type)
     with open(file_path, "r", encoding="utf-8") as f:
         return json.load(f)
+
+
+if __name__ == "__main__":
+    # Doesn't need to always be running:
+    print(break_string("  foo... 'Tuesday-morning' oh gosh! -why!?"))

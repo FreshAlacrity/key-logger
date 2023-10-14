@@ -43,7 +43,9 @@ To run on startup, make a shortcut to main.pyw and add it to your startup folder
 - performance
   - [x] start timing different operations
 - practice
-  - [ ] make a practice arena where layouts can be tested that tracks average speed and where mistakes are made
+  - [ ] export usable dictionary + layout
+  - [ ] make a companion webapp to practice/test with arbitrary keys assigned
+      - [ ] track average speed and where mistakes are made
 - analysis
   - [ ] what words are most likely to precede and follow a given word
     - [ ] if a word is extremely often followed or preceded by another, group them into one word (so for example, ".py" and ".png" should be considered words)
@@ -51,28 +53,28 @@ To run on startup, make a shortcut to main.pyw and add it to your startup folder
   - [x] import usage data
   - [ ] import and include samples of ideal usage
     - [x] gather samples
+      - [ ] add a list of countries, major cities, and names of language (in English and in the native language)
     - [x] include also pre-compiled word dictionaries
   - [x] find words
     - [x] first, find and remove hotkeys
     - [x] take into account delete presses
     - [x] make a dictionary of word frequency
   - [ ] filter out/correct common mispellings
+    - [x] install and test https://github.com/barrust/pyspellchecker/tree/master
+    - [ ] import keys from the reference dictionary of *not* mispelled words
     - [ ] redirect common mispellings to the correct word
-    - [ ] keep 'in versions of 'ing words
-    - [ ] install and test https://github.com/barrust/pyspellchecker/tree/master
+    - [ ] don't correct 'in versions of 'ing words
     - [ ] seems handy: `unknown([words])`
   - [x] track by number but remove commas and new lines
     - [ ] track where they happen most frequently and re-include those as "words"
-    - [ ] filter commas out of CSVs correctly
-  - [ ] support abbreviations and things like "dont" to "don't" (for apostrophes, dashes, and semicolons)
+    - [x] filter commas out of CSVs correctly
+  - [x] support abbreviations and things like "dont" to "don't" (for apostrophes, dashes, and semicolons)
   - [ ] layout scoring
     - [ ] by word collisions (divided by the number of word uses in the dictionary that goes with it?)
       - [ ] see how much conflict increases with i and e together just for curiosity's sake (since that would make a lot of common mispellings moot)
     - [ ] try using the time data from logs to calculate average conflicts per minute
   - [x] find what characters conflict most
   - [x] assemble conflicts into possible key arrangements
-  - [ ] make a companion webapp to practice/test with arbitrary keys assigned
-  - [ ] export usable dictionary + layout
 - logging
   - [ ] mouse clicks
   - [ ] mouse movements (with delta if possible)
