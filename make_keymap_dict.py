@@ -2,6 +2,7 @@ from generate_layout import generate_keymap
 from word_frequency import get_word_dict
 from timetest import time_test
 from export import to_json as export_to_json
+from export import lazy_version
 
 
 @time_test("Assemble keymapped dictionary")  # pylint: disable=no-value-for-parameter
@@ -29,6 +30,11 @@ def assemble_dictionary(key_arr, word_dict):
     for word, num in word_dict.items():
         key = get_keycode(word)
         final_dict[key] = final_dict.get(key, []) + [(word, num)]
+        
+        # Also add contractions, abbreviations etc:
+        if lazy_version(word) != word:
+            key_2 = get_keycode(lazy_version(word))
+            final_dict[key_2] = final_dict.get(key_2, []) + [(word, num)]
         
     # Sort each list by frequency
     for keycode in final_dict:

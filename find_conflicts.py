@@ -1,6 +1,7 @@
 import pandas  # pylint: disable=import-error
 from export import conflict_csv_file_path
 from export import to_csv as export_to_csv
+from export import lazy_version
 from word_frequency import get_word_dict
 from word_frequency import low_bar
 from word_frequency import make_dicts_for_samples
@@ -45,7 +46,7 @@ def find_unique_chars(word_dict):
     print(f"Characters assembled: {''.join(all_chars)}")
     return all_chars
 
-
+    
 def add_synonyms(word_dict):
     """Strip the 's out of words and add those versions to the dict"""
     
@@ -53,9 +54,7 @@ def add_synonyms(word_dict):
     for word, value in word_dict.items():
         new_dict[word] = value
         if "'" in word or "-" in word or ";" in word:
-            s = word.replace("'", '')
-            s = word.replace("-", '')
-            s = word.replace(";", '')
+            s = lazy_version(word)
             new_dict[s] = new_dict.get(s, 0) + value
             # print(s)  # @todo figure out why this is catching *a lot* of things
     return new_dict

@@ -4,6 +4,14 @@ from datetime import date
 from pathlib import Path
 
 
+def lazy_version(word):
+    if "'" in word or "-" in word or ";" in word:
+        word = word.replace("'", '')
+        word = word.replace("-", '')
+        word = word.replace(";", '')
+    return word
+
+
 def break_string(string):
     # @todo handle these with the regex module
     # @todo allow groups of these without spaces (so like ?! and ... and ```)
