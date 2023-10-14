@@ -169,25 +169,7 @@ def generate_word_dict():
 
 
 def get_word_dict(live=False):
-    """Return a completed dictionary of words
-    with a value for how often they appear,
-    either by generating one with all recent data
-    or retrieving one generated earlier in the same day"""
-
-    try:
-        if live:
-            # @later find a more elegant way to do this?
-            raise FileNotFoundError("Don't use the file")
-        word_dict = export.read_in_dict_file("usage_dictionary")
-        print("Imported dictionary export from earlier today")
-    except FileNotFoundError:
-        print("Dictionary export not found; making one now")
-        
-        word_dict = generate_word_dict()
-        export.to_json(word_dict, "usage_dictionary")
-        print("Dictionary exported...")
-
-    return word_dict
+    return export.get_dict("usage_dictionary", generate_word_dict, live=live)
 
 
 # Run a quick test of this module
@@ -197,4 +179,3 @@ if __name__ == "__main__":
 
     words_dict = get_word_dict(live=True)
     print_words_dict(words_dict)
-    # get_word_dict()

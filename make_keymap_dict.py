@@ -1,12 +1,13 @@
 from generate_layout import generate_keymap
 from word_frequency import get_word_dict
 from timetest import time_test
-from export import to_json as export_to_json
 from export import lazy_version
+from export import get_dict
 
 
 @time_test("Assemble keymapped dictionary")  # pylint: disable=no-value-for-parameter
 def assemble_dictionary(key_arr, word_dict):
+    
     """Takes an array of what characters are assigned to which keys and assembles a dictionary of words that can be produced with different keycode sequences"""
     
     def build_translation_dict():
@@ -43,11 +44,17 @@ def assemble_dictionary(key_arr, word_dict):
             #if final_dict[keycode][1][1] > 100:
                 #print(final_dict[keycode])
 
-    # Export to file (including the keymap)
-    export_to_json({ "keymap": key_arr, "dictionary": final_dict }, "keymap_dictionary")
-    return final_dict
+    return { "keymap": key_arr, "dictionary": final_dict }
+
+
+def make_keymap_dict():
+    return assemble_dictionary(generate_keymap(), get_word_dict())
+
+
+def get_keymap_dict(live=False):
+    return get_dict("keymap_dictionary", make_keymap_dict, live=live)
 
 
 # Run a quick test of this module
 if __name__ == "__main__":
-    assemble_dictionary(generate_keymap(), get_word_dict())
+    print(get_keymap_dict(live=True))

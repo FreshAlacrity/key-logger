@@ -128,6 +128,7 @@ def lowercase(word_dict):
     return lowercase_version
 
 
+# @todo see about combining this with the function for dicts in export.py
 def get_conflict_data(live=False):
     try:
         if live:

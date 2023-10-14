@@ -45,7 +45,10 @@ To run on startup, make a shortcut to main.pyw and add it to your startup folder
 - practice
   - [ ] export usable dictionary + layout
   - [ ] make a companion webapp to practice/test with arbitrary keys assigned
-      - [ ] track average speed and where mistakes are made
+    - [ ] export words that can be made with minimum sets of keys/labels
+      - [ ] start with the most common letters in all and see how many words can be made with combinations of those
+    - [ ] export sentences from output samples to use as practice material
+    - [ ] track average speed and where mistakes are made
 - analysis
   - [ ] what words are most likely to precede and follow a given word
     - [ ] if a word is extremely often followed or preceded by another, group them into one word (so for example, ".py" and ".png" should be considered words)

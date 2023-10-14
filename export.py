@@ -163,6 +163,27 @@ def read_in_dict_file(dict_type):
     with open(file_path, "r", encoding="utf-8") as f:
         return json.load(f)
 
+def get_dict(dict_type, get_with, live=False):
+    """Return a completed dictionary of words
+    with a value for how often they appear,
+    either by generating one with all recent data
+    or retrieving one generated earlier in the same day"""
+
+    try:
+        if live:
+            # @later find a more elegant way to do this?
+            raise FileNotFoundError("Don't use the file")
+        result = read_in_dict_file(dict_type)
+        print(f"Imported {dict_type} export from earlier today")
+    except FileNotFoundError:
+        print(f"Exported {dict_type} not found; making one now")
+        
+        result = get_with()
+        to_json(result, dict_type)
+        print(f"Exported {dict_type}")
+
+    return result
+
 
 if __name__ == "__main__":
     # Doesn't need to always be running:
