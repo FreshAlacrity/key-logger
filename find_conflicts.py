@@ -3,6 +3,7 @@ from export import conflict_csv_file_path
 from export import to_csv as export_to_csv
 from word_frequency import get_word_dict
 from word_frequency import low_bar
+from word_frequency import make_dicts_for_samples
 from timetest import time_test
 
 # Minimum occurances for both words and characters
@@ -162,4 +163,7 @@ def test_export_import():
 
 # Run a quick test of this module
 if __name__ == "__main__":
+    # Refresh the word frequency dictionary
+    make_dicts_for_samples()
+    get_word_dict(live=True)
     test_export_import()

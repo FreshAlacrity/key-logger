@@ -9,7 +9,7 @@ def break_string(string):
     # @todo allow groups of these without spaces (so like ?! and ... and ```)
     
     # Treat these symbols as independent words
-    BREAK_AT = "\n | \" . , \\ / & = + [ ] ( ) { } : _ @ $ ? ! * ` “ ” --".split()
+    BREAK_AT = "\n | \" . , \\ / & = + [ ] ( ) { } : _ @ $ ? ! * ` “ ” -- ‘ ’".split()
     for char in BREAK_AT:
         string = string.replace(char, f" {char} ")
         
