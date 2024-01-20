@@ -1,6 +1,7 @@
-
 from timetest import time_test
 from export import get_log_entries
+from export import break_string
+
 
 @time_test("Keypress filter")  # pylint: disable=no-value-for-parameter
 def filter_keypresses(log_list):
@@ -25,7 +26,8 @@ def filter_keypresses(log_list):
 
 @time_test("Word building")  # pylint: disable=no-value-for-parameter
 def build_words(log_list):
-    return "".join(filter_keypresses(log_list)).split()
+    # @todo break this into lines instead of words here
+    return break_string("".join(filter_keypresses(log_list))).split()
 
 
 def prune_release(log_list):
@@ -47,18 +49,20 @@ def catch_hotkeys(log_list):
                 found = False
                 while not found:
                     skip += 1
-                    # This prevents an error when the word_catch is run *while* holding a key down from a hotkey:
-                    if skip < len(log_list):
-                        if this_entry["key"] == log_list[i + skip]["key"]:
-                            found = True
+                    if (i + skip) > len(log_list) - 1:
+                        # Prevents list overflow
+                        break
+                    elif this_entry["key"] == log_list[i + skip]["key"]:
+                        found = True
                 continue
-        new_list.append(this_entry)
+            else:
+                new_list.append(this_entry)
     return new_list
 
 
 def get_old_log():
     log_list = []
-    with open("old_log.txt", "r", encoding="utf-8") as f:
+    with open("archive/old_log.txt", "r", encoding="utf-8") as f:
         for line in f:
             log_list.append({"key": line.rstrip(), "action": "pressed"})
     return log_list
@@ -130,4 +134,4 @@ def get_all_logged_words():
   
   # Run a quick test of this module
 if __name__ == "__main__":
-    get_all_logged_words()
+    print(get_all_logged_words())

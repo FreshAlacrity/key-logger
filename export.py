@@ -17,7 +17,7 @@ def break_string(string):
     # @todo allow groups of these without spaces (so like ?! and ... and ```)
     
     # Treat these symbols as independent words
-    BREAK_AT = "\n | \" . , \\ / & = + [ ] ( ) { } : _ @ $ ? ! * ` “ ” -- ‘ ’".split()
+    BREAK_AT = "\n | \" . , \\ / & = + [ ] ( ) { } : _ @ $ ? ! * ` “ ” -- – ‘ ’".split()
     for char in BREAK_AT:
         string = string.replace(char, f" {char} ")
         
@@ -89,7 +89,10 @@ def get_log_entries():
     def break_line(line):
         line = line.rstrip()
         labels = ["time", "action", "key"]
-        parts = line.split(" - ")
+        parts = line.split(" - ", 2)
+        if not len(parts) == 3:
+            # Partial lines occur when the logger is interrupted or the log edited
+            raise KeyError(f"This line does not have the required parts: {line}")
         line_dict = {}
         for i, p in enumerate(parts):
             line_dict[labels[i]] = p
@@ -125,6 +128,20 @@ def json_file_path(dict_type, sample=False):
         return f"samples/sample_dicts/{dict_type}.json"
 
 
+def to_json(dict_obj, dict_type, sample=False):
+    """Import a previously exported JSON file by string/reference"""
+    file_path = json_file_path(dict_type, sample)
+    with open(file_path, "w", encoding="utf-8") as f:
+        json.dump(dict_obj, f, ensure_ascii=False, indent=4)
+
+
+def read_in_dict_file(dict_type, sample=False):
+    """Retrieve a JSON file with the word dictionary stored earlier today"""
+    file_path = json_file_path(dict_type, sample)
+    with open(file_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
 def to_csv(conflict_dict):
     """Pulls in a CSV with row and column headers"""
     def safe(key):
@@ -149,19 +166,6 @@ def to_csv(conflict_dict):
         writer.writeheader()
         writer.writerows(format_as_rows(new_dict))
 
-    
-def to_json(dict_obj, dict_type, sample=False):
-    """Import a previously exported JSON file by string/reference"""
-    file_path = json_file_path(dict_type, sample)
-    with open(file_path, "w", encoding="utf-8") as f:
-        json.dump(dict_obj, f, ensure_ascii=False, indent=4)
-
-
-def read_in_dict_file(dict_type):
-    """Retrieve a JSON file with the word dictionary stored earlier today"""
-    file_path = json_file_path(dict_type)
-    with open(file_path, "r", encoding="utf-8") as f:
-        return json.load(f)
 
 def get_dict(dict_type, get_with, live=False):
     """Return a completed dictionary of words
@@ -186,5 +190,5 @@ def get_dict(dict_type, get_with, live=False):
 
 
 if __name__ == "__main__":
-    # Doesn't need to always be running:
-    print(break_string("  foo... 'Tuesday-morning' oh gosh! -why!?"))
+    print(len(get_log_entries()))
+    #print(break_string("  foo... 'Tuesday-morning' oh gosh! -why!?"))

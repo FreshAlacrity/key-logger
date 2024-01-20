@@ -1,4 +1,4 @@
 REM taskkill /F /IM Python*
-taskkill Python*
+taskkill /F /IM Python*
 
 REM python "main.pyw"

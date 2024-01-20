@@ -5,25 +5,46 @@ directory = Path("logs/")
 logs = []
 
 
+def valid_line(line, index):
+    parts = line.split(" - ")
+    if len(parts) < 3:
+        # print(index, line)
+        return False
+    else:
+        return True
+
+
 def break_line(line):
     line = line.rstrip()
     labels = ["time", "action", "key"]
     parts = line.split(" - ")
-    dict = {}
+    d = {}
+    # Note that this strips out mouse movement details
     for i, p in enumerate(parts):
-        dict[labels[i]] = p
-    return dict
+        if i < 3:
+            d[labels[i]] = p
+    return d
 
 
 def get_log_entries():
     log_list = []
     p = directory.glob("**/*")
+    line_count = 0
+    invalid = 0
     files = [x for x in p if x.is_file()]
     print(len(files))
     for q in files:
+        print(q)
         with q.open() as f:
             for line in f:
-                log_list.append(break_line(line))
+                line_count += 1
+                if valid_line(line, line_count):
+                    log_list.append(break_line(line))
+                else:
+                    invalid += 1
+            if invalid > 0:
+                percent = round(100 * invalid / line_count, 2)
+                print(f"Invalid lines: {percent}%")
     return log_list
 
 
@@ -45,7 +66,7 @@ def simplify_key_names(log_list):
 
 def collapse_key_taps(log_list):
     """Consolidates entries of keys that were pressed and then released immediately."""
-    
+
     skip = False
     new_list = []
     for i, this_entry in enumerate(log_list):
@@ -83,12 +104,13 @@ def collapse_hot_keys(log_list):
                         skip = 2
                         continue
         new_list.append(this_entry)
-    # print("Hot keys found:", len(hot_keys))  #, "\n\n".join(hot_keys))
+    print("Hot keys found:", len(hot_keys), "\n\n".join(hot_keys))
     return new_list
 
 
 def collapse_key_rolling(log_list):
     """Consolidates keys that were pressed and released in a quick alternation."""
+
     # @todo look for rolls with three letters?
     def skip_key_same_key(index):
         if (index + 2) < len(log_list):
@@ -97,13 +119,10 @@ def collapse_key_rolling(log_list):
                     if log_list[index + 2]["action"] == "released":
                         return True
         return False
-    
+
     def roll_found(index):
-        return all([
-            skip_key_same_key(index),
-            skip_key_same_key(index + 1)
-        ])
-        
+        return all([skip_key_same_key(index), skip_key_same_key(index + 1)])
+
     roll_count = 0
     skip = 0
     new_list = []
@@ -112,7 +131,7 @@ def collapse_key_rolling(log_list):
             skip = skip - 1
             continue
         if roll_found(i):
-            new_list.append({ "key": "ROLL FOUND", "action": "note" })
+            new_list.append({"key": "ROLL FOUND", "action": "note"})
             # skip = 3
             roll_count += 1
         new_list.append(this_entry)
@@ -120,11 +139,13 @@ def collapse_key_rolling(log_list):
     return new_list
 
 
-logs = get_log_entries()
-print("Number of initial entries:", len(logs))
-logs = simplify_key_names(logs)
-logs = collapse_key_taps(logs)
-logs = collapse_hot_keys(logs)
-logs = collapse_hot_keys(logs)
-logs = collapse_key_rolling(logs)
-print("Number of collapsed entries:", len(logs))
+# Run a quick test of this module
+if __name__ == "__main__":
+    logs = get_log_entries()
+    print("Number of initial entries:", len(logs))
+    logs = simplify_key_names(logs)
+    logs = collapse_key_taps(logs)
+    logs = collapse_hot_keys(logs)
+    logs = collapse_hot_keys(logs)
+    logs = collapse_key_rolling(logs)
+    print("Number of collapsed entries:", len(logs))

@@ -11,6 +11,7 @@ Settings -> Windows Security settings -> Virus & Threat Protection -> Virus  & t
 To run on startup, make a shortcut to main.pyw and add it to your startup folder or add the file to the windows registry (HKCU\Software\Microsoft\Windows\CurrentVersion\Run)
 
 ## Resources
+- https://nitratine.net/blog/post/how-to-use-pynputs-mouse-and-keyboard-listener-at-the-same-time/
 - https://docs.python.org/3/library/pathlib.html
 - https://pynput.readthedocs.io/en/latest/keyboard.html
 - https://www.askpython.com/python/examples/python-keylogger
@@ -40,6 +41,9 @@ To run on startup, make a shortcut to main.pyw and add it to your startup folder
   - add names after checking spelling
 
 ## To Do
+- [ ] troubleshoot why a lot of WASD is still ending up in spellcheck
+- [ ] also add names as known in spellcheck
+- [ ] implement substitutions
 - performance
   - [x] start timing different operations
 - practice
@@ -57,8 +61,10 @@ To run on startup, make a shortcut to main.pyw and add it to your startup folder
   - [ ] import and include samples of ideal usage
     - [x] gather samples
       - [ ] add a list of countries, major cities, and names of language (in English and in the native language)
+      - [ ] add state and airport abbreviations
     - [x] include also pre-compiled word dictionaries
   - [x] find words
+    - [ ] include "enter" key as newline
     - [x] first, find and remove hotkeys
     - [x] take into account delete presses
     - [x] make a dictionary of word frequency
@@ -67,7 +73,7 @@ To run on startup, make a shortcut to main.pyw and add it to your startup folder
     - [ ] import keys from the reference dictionary of *not* mispelled words
     - [ ] redirect common mispellings to the correct word
     - [ ] don't correct 'in versions of 'ing words
-    - [ ] seems handy: `unknown([words])`
+    - [ ] trim hashtags off when spellchecking
   - [x] track by number but remove commas and new lines
     - [ ] track where they happen most frequently and re-include those as "words"
     - [x] filter commas out of CSVs correctly
@@ -78,10 +84,11 @@ To run on startup, make a shortcut to main.pyw and add it to your startup folder
     - [ ] try using the time data from logs to calculate average conflicts per minute
   - [x] find what characters conflict most
   - [x] assemble conflicts into possible key arrangements
+  - [ ] use pprint
 - logging
-  - [ ] mouse clicks
-  - [ ] mouse movements (with delta if possible)
-  - [ ] scrolling
+  - [x] mouse clicks
+  - [x] mouse movements (with delta if possible)
+  - [x] scrolling
   - [x] log key up and key down separately
   - save logs:
     - [x] in dated files
